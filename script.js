@@ -5,7 +5,7 @@ const lightboxImg = document.getElementById('lightbox-img');
 const lightboxCaption = document.getElementById('lightbox-caption');
 
 const HOVER_DELAY = 300; // ms to hover before the lightbox opens
-const LEAVE_CLOSE_DELAY = 250;  // ms after leaving the image before it closes (forgives small slips)
+const LEAVE_CLOSE_DELAY = 400;  // ms after leaving the image before it closes (forgives small slips)
 
 let hoverTimer = null;
 let leaveTimer = null;
