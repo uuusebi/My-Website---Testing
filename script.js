@@ -19,12 +19,12 @@ let mouseY = 0;
 document.addEventListener('pointermove', (e) => {
     mouseX = e.clientX;
     mouseY = e.clientY;
-
+});
 function isOverCard(card) {
     if (!card) return false;
     const r = card.getBoundingClientRect();
     return mouseX >= r.left && mouseX <= r.right && mouseY >= r.top && mouseY <= r.bottom;
-
+}
 function openLightbox(imageSrc, descriptionText) {
 
     // Only attempts to load if you have a real image file name
