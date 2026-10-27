@@ -75,21 +75,78 @@ header p {
     background: rgba(0,0,0,0.9);
     flex-direction: column; /* Stacks the image on top and text on bottom */
     justify-content: center;
+.lightbox {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
     align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0);
+    backdrop-filter: blur(0px);
+    opacity: 0;
+    visibility: hidden;
+    cursor: zoom-out;
+    z-index: 1000;
+    /* closing: fade out, then hide */
+    transition:
+        opacity 0.4s ease,
+        background 0.5s ease,
+        backdrop-filter 0.5s ease,
+        visibility 0s linear 0.5s;
+}
+
+.lightbox.active {
+    opacity: 1;
+    visibility: visible;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(12px);
+    transition:
+        opacity 0.5s ease,
+        background 0.6s ease,
+        backdrop-filter 0.6s ease,
+        visibility 0s;
+}
+
+.lightbox img {
+    max-width: 88vw;
+    max-height: 80vh;
+    border-radius: 6px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+    /* closed state: small, pushed back */
+    transform: scale(0.6) translateY(30px);
+    opacity: 0;
+    transition:
+        transform 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 0.4s ease;
+}
+
+.lightbox.active img {
+    /* open state: pops forward */
+    transform: scale(1) translateY(0);
+    opacity: 1;
+    transition:
+        transform 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.6s ease;
+}
+
+.lightbox p {
+    color: #fff;
+    margin-top: 1.2rem;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.lightbox.active p {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.6s ease 0.35s, transform 0.6s ease 0.35s; /* appears after the image lands */
+}
+
+/* stop the page scrolling behind the lightbox */
+body.lightbox-open {
+    overflow: hidden;
+}    align-items: center;
     z-index: 1000;
 }
-.lightbox img { 
-    max-width: 90%; 
-    max-height: 80vh; 
-}
-
-#lightbox-caption {
-    color: #ffffff;
-    font-size: 1.1rem;
-    max-width: 600px;
-    text-align: center;
-    margin-top: 1.5rem;
-    line-height: 1.6;
-    padding: 0 1rem;
-}
-
