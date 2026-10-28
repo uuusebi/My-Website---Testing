@@ -7,13 +7,21 @@ const lightboxCaption = document.getElementById('lightbox-caption');
 const HOVER_DELAY = 300; // ms to hover before the lightbox opens
 const LEAVE_CLOSE_DELAY = 400;  // ms after leaving the image before it closes (forgives small slips)
 
+const TYPING_SPEED = 35;        // ms per character (lower = faster)
+const TYPING_START_DELAY = 700; // ms to wait before typing starts, so the image can land first
+const seenLightboxes = new Set(); // remembers which projects have already been opened
+
 let hoverTimer = null;
 let leaveTimer = null;
+
 let lockedCard = null;          // stops instant re-open after closing while still on the card
 let lastOpenedCard = null;
 let armedToClose = false;       // only true once the cursor has been over the image
 let mouseX = 0;
+
 let mouseY = 0;
+
+let typingTimer = null;
 
 // Track the cursor so we know if it's still on a card when the lightbox closes
 document.addEventListener('pointermove', (e) => {
@@ -25,23 +33,94 @@ function isOverCard(card) {
     const r = card.getBoundingClientRect();
     return mouseX >= r.left && mouseX <= r.right && mouseY >= r.top && mouseY <= r.bottom;
 }
-function openLightbox(imageSrc, descriptionText) {
+function typeText(text) {
+    let i = 0;
+    lightboxCaption.textContent = "";
+    lightboxCaption.classList.add('typing');
+
+    function typeNextChar() {
+        i++;
+        lightboxCaption.textContent = text.slice(0, i); // first i characters
+        if (i < text.length) {
+            typingTimer = setTimeout(typeNextChar, TYPING_SPEED);
+        } else {
+            lightboxCaption.classList.remove('typing'); // done, so hide the cursor
+        }
+    }
+
+    typingTimer = setTimeout(typeNextChar, TYPING_START_DELAY);
+}
+// ---------- Audio ----------
+const AUDIO_VOLUME = 0.6; // 0 to 1
+const FADE_MS = 800;      // how long the fade in / out takes
+let currentAudio = null;  // the song playing right now (if any)
+
+function fadeTo(audio, target, onDone) {
+    clearInterval(audio.fadeTimer);
+    const step = (target - audio.volume) / (FADE_MS / 50); // volume change per 50ms tick
+    audio.fadeTimer = setInterval(() => {
+        const next = audio.volume + step;
+        const reached = step > 0 ? next >= target : next <= target;
+        if (reached) {
+            audio.volume = target;
+            clearInterval(audio.fadeTimer);
+            if (onDone) onDone();
+        } else {
+            audio.volume = next;
+        }
+    }, 50);
+}
+
+function playAudio(src) {
+    stopAudio(true);          // cut off any previous song
+    if (!src) return;         // this project has no song
+
+    currentAudio = new Audio(encodeURI(src)); // encodeURI makes the spaces in your path safe
+    currentAudio.loop = true;
+    currentAudio.volume = 0;  // start silent, then fade up
+    currentAudio.play()
+        .then(() => fadeTo(currentAudio, AUDIO_VOLUME))
+        .catch((err) => console.log('Audio did not play:', err));
+}
+
+function stopAudio(immediate = false) {
+    if (!currentAudio) return;
+    const audio = currentAudio;
+    currentAudio = null;
+    if (immediate) {
+        clearInterval(audio.fadeTimer);
+        audio.pause();
+    } else {
+        fadeTo(audio, 0, () => audio.pause()); // fade out, then stop
+    }
+}
+function openLightbox(imageSrc, descriptionText, audioSrc) {
 
     // Only attempts to load if you have a real image file name
     if (imageSrc && imageSrc !== '') {
         lightboxImg.src = imageSrc;
     }
 
+      // Stop any typing left over from a previous lightbox
+    clearTimeout(typingTimer);
+    lightboxCaption.classList.remove('typing');
+
     // Inject the description text into the popup window
     if (descriptionText) {
-        lightboxCaption.textContent = descriptionText;
+        if (seenLightboxes.has(imageSrc)) {
+            lightboxCaption.textContent = descriptionText; // seen before: show instantly
+        } else {
+            seenLightboxes.add(imageSrc);                  // first time: remember it, then type it
+            typeText(descriptionText);
+        }
     } else {
         lightboxCaption.textContent = "";
         // Leaves it blank if you don't provide a description
     }
    
-    armedToClose = false;
+        armedToClose = false;
     clearTimeout(leaveTimer);
+    playAudio(audioSrc);   // NEW
     // Double requestAnimationFrame so the browser registers the closed state first,
     // which lets the scale-up animation play
     requestAnimationFrame(() => {
@@ -53,6 +132,8 @@ function openLightbox(imageSrc, descriptionText) {
 }
 
 function closeLightbox() {
+    stopAudio();           // NEW
+    clearTimeout(typingTimer);
     clearTimeout(leaveTimer);
     armedToClose = false;
     lightbox.classList.remove('active');
@@ -88,19 +169,22 @@ document.addEventListener('keydown', (e) => {
     });
 });
 
-// Hover-to-open after 1.3 seconds (mouse devices only, not touch)
-if (window.matchMedia('(hover: hover)').matches) {
+// ---------- Hover a card to open ----------
+function setupCardHover() {
     document.querySelectorAll('.project-card').forEach((card) => {
 
-        card.addEventListener('mouseenter', () => {
+        card.addEventListener('pointerenter', (e) => {
+            if (e.pointerType !== 'mouse') return; // ignore touch, so taps just click
             if (card === lockedCard) return;
+
+            clearTimeout(hoverTimer);
             hoverTimer = setTimeout(() => {
                 lastOpenedCard = card;
-                card.click(); // runs the card's existing onclick
+                card.click(); // runs the card's click handler
             }, HOVER_DELAY);
         });
 
-        card.addEventListener('mouseleave', () => {
+        card.addEventListener('pointerleave', () => {
             clearTimeout(hoverTimer);
             if (card === lockedCard) lockedCard = null;
         });
@@ -112,3 +196,39 @@ if (window.matchMedia('(hover: hover)').matches) {
         });
     });
 }
+// ---------- Build the cards from works.json ----------
+async function loadProjects() {
+    const grid = document.querySelector('.portfolio-grid');
+    const response = await fetch('projects.json');
+    const works = await response.json();
+
+    works
+        .filter((work) => work.status === 'live')
+        .sort((a, b) => a.count - b.count)
+        .forEach((work) => {
+            const card = document.createElement('div');
+            card.className = 'project-card';
+
+            const media = work.image
+                ? `<img src="${work.image}" class="project-image" alt="${work.title}">`
+                : `<div class="project-image"></div>`;
+
+            card.innerHTML = `
+                ${media}
+                <div class="project-info">
+                    <p>${work.client}</p>
+                    <h3>${work.title}</h3>
+                </div>
+            `;
+
+                       if (work.image) {
+                card.addEventListener('click', () => openLightbox(work.image, work.description, work.audio));
+            }
+
+            grid.appendChild(card);
+        });
+
+    setupCardHover();
+}
+
+loadProjects();
