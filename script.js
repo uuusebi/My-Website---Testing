@@ -11,6 +11,10 @@ const TYPING_SPEED = 35;        // ms per character (lower = faster)
 const TYPING_START_DELAY = 700; // ms to wait before typing starts, so the image can land first
 const seenLightboxes = new Set(); // remembers which projects have already been opened
 
+const metaTitle = document.getElementById('meta-title');
+const metaType = document.getElementById('meta-type');
+const metaDate = document.getElementById('meta-date');
+
 let hoverTimer = null;
 let leaveTimer = null;
 
@@ -94,7 +98,10 @@ function stopAudio(immediate = false) {
         fadeTo(audio, 0, () => audio.pause()); // fade out, then stop
     }
 }
-function openLightbox(imageSrc, descriptionText, audioSrc) {
+function openLightbox(imageSrc, descriptionText, audioSrc, meta = {}) {
+    metaTitle.textContent = meta.title || '';
+    metaType.textContent = meta.type || '';
+    metaDate.textContent = meta.date || '';
 
     // Only attempts to load if you have a real image file name
     if (imageSrc && imageSrc !== '') {
@@ -222,8 +229,12 @@ async function loadProjects() {
             `;
 
                        if (work.image) {
-                card.addEventListener('click', () => openLightbox(work.image, work.description, work.audio));
-            }
+card.addEventListener('click', () => openLightbox(
+    work.image,
+    work.description,
+    work.audio,
+    { title: work.title, type: work.category, date: work.date }
+));            }
 
             grid.appendChild(card);
         });

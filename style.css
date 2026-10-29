@@ -9,8 +9,9 @@ body {
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     background: #f9f9f9;
     color: #111;
-    padding: 0 3.5vw 4rem;
+    padding: 5.5rem 3.5vw 4rem;
 }
+
 
 /* ---------- Header ---------- */
 header {
@@ -40,45 +41,188 @@ header p {
 }
 
 .project-card {
-    background: #fff;
-    border: 1px solid #eee;
+    position: relative;               /* lets the info panel float over the image */
+    background: none;                 /* no more white box */
+    border: none;
+    border-radius: 18px;
     cursor: pointer;
-    overflow: hidden;
-    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-                box-shadow 0.4s ease;
+    overflow: visible;                /* so the soft shadows aren't clipped */
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .project-card:hover {
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+    transform: translateY(-3px);
 }
 
-/* Works for both <img class="project-image"> and the gray placeholder <div> */
 .project-image {
     display: block;
     width: 100%;
-    aspect-ratio: 1/1;
+    aspect-ratio: 1 / 1;
     object-fit: cover;
+    border-radius: 18px;
     background: #ddd;
 }
 
+/* The frosted, neumorphic panel */
 .project-info {
-    padding: 1.8rem 2rem 2rem;
+    position: absolute;
+    left: 1rem;
+    bottom: 1rem;
+    width: fit-content;               /* smaller: only as wide as the text */
+    max-width: calc(100% - 2rem);
+    padding: 0.7rem 1.1rem;
+    border-radius: 14px;
+
+    /* frosted glass */
+    background: rgba(240, 240, 243, 0.55);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+
+    /* neumorphic: a dark shadow bottom-right, a light one top-left */
+    box-shadow:
+        6px 6px 14px rgba(0, 0, 0, 0.22),
+        -5px -5px 12px rgba(255, 255, 255, 0.45),
+        inset 1px 1px 1px rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.35);
 }
 
 .project-info p {
-    font-size: 0.95rem;
+    font-size: 0.7rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #888;
-    margin-bottom: 0.3rem;
+    color: #666;
+    margin-bottom: 0.15rem;
 }
 
 .project-info h3 {
-    font-size: 1.5rem;
+    font-size: 1rem;
     font-weight: 700;
     letter-spacing: -0.01em;
+    color: #222;
+}
+/* ---------- Navigation bar ---------- */
+.navbar {
+    position: fixed;
+    top: 1.2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 500;                       /* above the page, below the lightbox (1000) */
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.4rem;
+    border-radius: 999px;
+
+    /* frosted glass */
+    background: rgba(240, 240, 243, 0.55);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+
+    /* neumorphic: raised */
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow:
+        6px 6px 14px rgba(0, 0, 0, 0.12),
+        -5px -5px 12px rgba(255, 255, 255, 0.8),
+        inset 1px 1px 1px rgba(255, 255, 255, 0.6);
 }
 
+.nav-link {
+    font: inherit;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: #555;
+    background: none;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: box-shadow 0.3s ease, color 0.3s ease;
+}
+
+/* hover and current page: look pressed in */
+.nav-link:hover,
+.nav-link.active {
+    color: #111;
+    box-shadow:
+        inset 2px 2px 5px rgba(0, 0, 0, 0.12),
+        inset -2px -2px 5px rgba(255, 255, 255, 0.9);
+}
+
+/* Contact dropdown */
+.nav-contact {
+    position: relative;
+}
+
+.contact-menu {
+    position: absolute;
+    top: calc(100% + 0.9rem);
+    right: 0;
+    min-width: 9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.4rem;
+    border-radius: 18px;
+    background: rgba(240, 240, 243, 0.65);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow:
+        6px 6px 14px rgba(0, 0, 0, 0.12),
+        -5px -5px 12px rgba(255, 255, 255, 0.8);
+
+    /* hidden by default, animates in when .open is added */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: opacity 0.25s ease, transform 0.25s ease, visibility 0s linear 0.25s;
+}
+
+.contact-menu.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    transition: opacity 0.25s ease, transform 0.25s ease, visibility 0s;
+}
+
+.contact-menu a {
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: #555;
+    padding: 0.7rem 1rem;
+    border-radius: 12px;
+    transition: box-shadow 0.3s ease, color 0.3s ease;
+}
+
+.contact-menu a:hover {
+    color: #111;
+    box-shadow:
+        inset 2px 2px 5px rgba(0, 0, 0, 0.12),
+        inset -2px -2px 5px rgba(255, 255, 255, 0.9);
+}
+
+/* About page */
+.about {
+    max-width: 60ch;
+}
+
+.about h1 {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 1.5rem;
+}
+
+.about p {
+    font-size: 1.2rem;
+    line-height: 1.7;
+    color: #444;
+    margin-bottom: 1.2rem;
+}
 /* ---------- Lightbox ---------- */
 .lightbox {
     position: fixed;
@@ -169,7 +313,37 @@ header p {
     /* caption appears after the image lands */
     transition: opacity 0.6s ease 0.35s, transform 0.6s ease 0.35s;
 }
+/* Info bar along the top of the lightbox */
+.lightbox-meta {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;     /* NEW: stacks title, type, and date vertically */
+    align-items: flex-end;    /* NEW: left-aligns the stack (replaces space-between) */
+    gap: 0.3rem;                /* smaller gap, since it's vertical now */
+    padding: 2rem 5vw;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #262626;
+    pointer-events: none;        /* clicks pass through to the lightbox */
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
 
+
+.lightbox.active .lightbox-meta {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.6s ease 0.2s, transform 0.6s ease 0.2s;
+}
+
+.lightbox-meta #meta-title {
+    font-weight: 700;
+}
 /* Stops the page scrolling behind the lightbox */
 body.lightbox-open {
     overflow: hidden;
@@ -201,6 +375,11 @@ body.lightbox-open {
 
     .lightbox p {
         max-width: 88vw;
+    }
+        .lightbox-meta {
+        flex-direction: column;
+        gap: 0.3rem;
+        padding: 1.5rem 6vw;
     }
 }
 

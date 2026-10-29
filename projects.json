@@ -1,12 +1,14 @@
 [
 {
-  "title": "dynamo for ilyvirato",
+  "title": "dynama for ilyvirato",
   "status": "live",
   "count": 1,
-  "slug": "dynamo",
+  "slug": "dynama",
   "client": "ilyvirato",
+  "category": "Cover Art",
   "image": "images/ilyvirato/dynama/dynama_2.png",
-  "description": "dynamo is a project that explores the concept of energy and movement through visual art. The project features a series of dynamic images that capture the essence of motion and power. Each piece is designed to evoke a sense of energy and vitality, inviting viewers to experience the thrill of movement in a static form."
+  "date": "2023-09-15",
+  "description": "dynama is a project that explores the concept of energy and movement through visual art. The project features a series of dynamic images that capture the essence of motion and power. Each piece is designed to evoke a sense of energy and vitality, inviting viewers to experience the thrill of movement in a static form."
 },
 {
   "title": "heavenly for ilyvirato",
@@ -14,14 +16,16 @@
   "count": 2,
   "slug": "heavenly",
   "client": "ilyvirato",
-  "category": "Album Cover Art",
+  "category": "Cover Art for EP",
   "image": "images/ilyvirato/heavenly/heavenly_cover.png",
+  "date": "2023-09-15",
   "description": "heavenly is a project that delves into the realm of celestial beauty and divine inspiration. Through a collection of ethereal visuals, the project aims to capture the sublime essence of the heavens, offering viewers a glimpse into the transcendent world of cosmic wonder."
 },
 {
   "title": "getting killed",
   "status": "live",
   "count": 3,
+  "date": "2023-09-15",
   "slug": "getting-killed",
   "client": "spec project",
   "category": "Cover Art",
