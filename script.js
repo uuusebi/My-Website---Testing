@@ -209,10 +209,20 @@ async function loadProjects() {
     const response = await fetch('projects.json');
     const works = await response.json();
 
+        // Reveals each card the first time it scrolls into view
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('in-view');
+                observer.unobserve(entry.target);   // only animate once
+            }
+        });
+    }, { threshold: 0.15 });
+
     works
         .filter((work) => work.status === 'live')
         .sort((a, b) => a.count - b.count)
-        .forEach((work) => {
+        .forEach((work, index) => {
             const card = document.createElement('div');
             card.className = 'project-card';
 
@@ -236,7 +246,10 @@ card.addEventListener('click', () => openLightbox(
     { title: work.title, type: work.category, date: work.date }
 ));            }
 
+                        card.classList.add('reveal');
+            card.style.setProperty('--i', index % 3);   // 0, 1, 2 across each row of three
             grid.appendChild(card);
+            observer.observe(card);
         });
 
     setupCardHover();

@@ -15,14 +15,51 @@ body {
 
 /* ---------- Header ---------- */
 header {
-    padding: 2rem 0 3rem;
+    padding: 2ch 0 3rem;
+}
+header.hero {
+    /* pinned in place while the cards slide over it */
+    position: sticky;
+    top: 0;
+    z-index: 0;
+
+    /* scroll-out effect, driven by --p from hero.js */
+    filter: blur(calc(var(--p, 0) * 28px));
+    opacity: calc(1 - var(--p, 0));
+    will-change: filter, opacity;
+
+    /* full-screen size, reaching past the body padding */
+    min-height: 100svh;
+    margin: -5.5rem -3.5vw 0;
+    padding: 0 3.5vw;
+
+    /* name on the left, paragraph on the right, both vertically centered */
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4rem;
+
+    overflow: hidden;
 }
 
-header h1 {
-    font-size: clamp(2.5rem, 5vw, 4rem);
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    margin-bottom: 1.2rem;
+header.hero h1 {
+    position: relative;
+    z-index: 1;
+    font-size: clamp(3.5rem, 13vw, 2rem);
+    line-height: .9;
+    letter-spacing: -0.04em;
+    text-align:center;
+}
+
+header.hero p {
+    position: relative;
+    z-index: 1;                         /* stays above the animation layer */
+    flex: 0 1 28rem;                    /* paragraph column: up to 28rem wide, shrinks if needed */
+    font-size: 1.2rem;
+    line-height: 1.6;
+    color: #838383;
+    text-align: center;                   /* use right to align the text to the right edge */
 }
 
 header p {
@@ -32,11 +69,100 @@ header p {
     color: #666;
 }
 
+/* ---------- Hero intro animation ---------- */
+
+/* Name and paragraph start invisible, then "focus" brings them in */
+header.hero h1,
+header.hero p {
+    opacity: 0;
+}
+
+header.hero h1.focus,
+header.hero p.focus {
+    animation: hero-focus 2.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes hero-focus {
+    from { opacity: 0; filter: blur(28px); }
+    to   { opacity: 1; filter: blur(0); }
+}
+
+/* Letters are hidden until the typewriter reaches them */
+header.hero .char {
+    position: relative;
+    visibility: hidden;
+}
+
+header.hero .char.on {
+    visibility: visible;
+}
+
+/* Blinking caret that rides along with the newest letter (takes up no space) */
+header.hero .char.caret::after {
+    content: "";
+    position: absolute;
+    right: -0.04em;
+    top: 0.08em;
+    bottom: 0.08em;
+    width: 0.06em;
+    background: currentColor;
+    animation: blink 0.7s steps(1) infinite;
+}
+
+/* Film grain overlay */
+header.hero::after {
+    content: "";
+    position: absolute;
+    inset: -50%;                                         /* oversized so it can shake without showing edges */
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+header.hero.ready::after {
+    animation:
+        grain-fade 3.2s ease-out both,                   /* heavy grain that settles to a faint one */
+        grain-shift 0.8s steps(1) infinite;              /* jitter, so it looks like moving film */
+}
+
+@keyframes grain-fade {
+    from { opacity: 0.65; }
+    to   { opacity: 0.12; }
+}
+
+@keyframes grain-shift {
+    0%   { transform: translate(0, 0); }
+    20%  { transform: translate(-5%, 4%); }
+    40%  { transform: translate(6%, -3%); }
+    60%  { transform: translate(-3%, -6%); }
+    80%  { transform: translate(5%, 3%); }
+    100% { transform: translate(0, 0); }
+}
+
+/* Gone: fully scrolled past, no longer takes clicks */
+header.hero.gone {
+    visibility: hidden;
+}
+
+/* Cards sit above the pinned hero */
+.portfolio-grid {
+    position: relative;
+    z-index: 1;
+}
+
+/* Reduced-motion users get the plain text */
+header.hero.static h1,
+header.hero.static p {
+    opacity: 1;
+}
+
 /* ---------- Portfolio grid ---------- */
 .portfolio-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
+    gap: 5rem;
     align-items: start; /* cards keep their own height, no stretching */
 }
 
@@ -44,7 +170,7 @@ header p {
     position: relative;               /* lets the info panel float over the image */
     background: none;                 /* no more white box */
     border: none;
-    border-radius: 18px;
+    border-radius: 10px;
     cursor: pointer;
     overflow: visible;                /* so the soft shadows aren't clipped */
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -54,12 +180,39 @@ header p {
     transform: translateY(-3px);
 }
 
+/* ---------- Card reveal ---------- */
+.project-card.reveal:not(.in-view) {
+    opacity: 0;                                   /* hidden until it scrolls into view */
+    transform: translateY(48px) scale(0.97);
+}
+
+.project-card.in-view {
+    animation: card-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation-delay: calc(var(--i, 0) * 120ms);   /* staggers cards within a row */
+}
+
+@keyframes card-in {
+    from {
+        opacity: 0;
+        transform: translateY(48px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .project-card.reveal:not(.in-view) { opacity: 1; transform: none; }
+    .project-card.in-view { animation: none; }
+}
+
 .project-image {
     display: block;
     width: 100%;
     aspect-ratio: 1 / 1;
     object-fit: cover;
-    border-radius: 18px;
+    border-radius: 10px;
     background: #ddd;
 }
 
@@ -101,12 +254,21 @@ header p {
     color: #222;
 }
 /* ---------- Navigation bar ---------- */
-.navbar {
+
+/* Invisible hover zone: sized by the bar plus the padding, centered at the top */
+.nav-zone {
+    --nav-speed: 2.1s;                                  /* one speed for everything */
+    --nav-ease: cubic-bezier(0.16, 1, 0.3, 1);
+
     position: fixed;
-    top: 1.2rem;
+    top: 0;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 500;                       /* above the page, below the lightbox (1000) */
+    z-index: 500;                                       /* above the page, below the lightbox (1000) */
+    padding: 1.2rem 3rem 3rem;                          /* top | left+right | bottom = trigger buffer */
+}
+
+.navbar {
     display: flex;
     align-items: center;
     gap: 0.3rem;
@@ -124,6 +286,50 @@ header p {
         6px 6px 14px rgba(0, 0, 0, 0.12),
         -5px -5px 12px rgba(255, 255, 255, 0.8),
         inset 1px 1px 1px rgba(255, 255, 255, 0.6);
+
+    /* hidden state: slid up, transparent */
+    opacity: 0;
+    transform: translateY(calc(-100% - 4rem));
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+        transform var(--nav-speed) var(--nav-ease),
+        opacity var(--nav-speed) ease-in,
+        visibility 0s linear var(--nav-speed);          /* hides only after the slide finishes */
+}
+
+/* shown state: slides down and fades in together */
+.nav-zone.visible .navbar {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+    pointer-events: auto;
+    transition:
+        transform var(--nav-speed) var(--nav-ease),
+        opacity var(--nav-speed) ease-out,
+        visibility 0s;
+}
+
+/* Small handle that hints the nav is up there */
+.nav-handle {
+    position: absolute;
+    top: 0.6rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 56px;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(240, 240, 243, 0.7);
+    box-shadow:
+        inset 1px 1px 2px rgba(0, 0, 0, 0.15),
+        inset -1px -1px 2px rgba(255, 255, 255, 0.9),
+        2px 2px 5px rgba(0, 0, 0, 0.08);
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.nav-zone.visible .nav-handle {
+    opacity: 0;
 }
 
 .nav-link {
@@ -264,9 +470,9 @@ header p {
 
 .lightbox img {
     display: block;
-    max-width: 80vw;
-    max-height: 80vh;
-    border-radius: 6px;
+    max-width: 70vw;
+    max-height: 70vh;
+    border-radius: 10px;
     box-shadow: 0 30px 50px rgba(0, 0, 0, 0.5);
     /* closed state: small, pushed back */
     transform: scale(0.6) translateY(30px);
@@ -360,6 +566,18 @@ body.lightbox-open {
 @media (max-width: 800px) {
     header p {
         font-size: 1.1rem;
+    }
+
+        header.hero {
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 1.5rem;
+    }
+
+    header.hero p {
+        flex: 0 0 auto;
+        max-width: 32rem;
     }
 
     .lightbox {
