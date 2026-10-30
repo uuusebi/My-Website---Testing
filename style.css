@@ -1,3 +1,44 @@
+:root {
+    /* ---------- Motion ---------- */
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --speed-med: 0.6s;
+    --speed-slow: 0.9s;
+
+    /* ---------- Colors ---------- */
+    --bg: #ffffff;
+    --text-color-h: #111;
+    --text-color-lightbox-header: #848484;
+    --text-color-p: #838383;
+    --text-color-project-info-p: #666;
+    --text-color-project-info-h3: #222;
+    --text-color-nav-link: #555;
+
+    /* ---------- Shape ---------- */
+    --radius-card: 10px;
+    --radius-panel: 14px;
+    --radius-pill: 999px;
+
+    /* ---------- Frosted glass ---------- */
+    --glass-bg: rgba(240, 240, 243, 0.55);
+    --glass-blur: blur(14px) saturate(140%);
+
+    /* ---------- Neumorphic shadows ---------- */
+    --shadow-raised:
+        6px 6px 14px rgba(0, 0, 0, 0.12),
+        -5px -5px 12px rgba(255, 255, 255, 0.8),
+        inset 1px 1px 1px rgba(255, 255, 255, 0.6);
+    --shadow-pressed:
+        inset 2px 2px 5px rgba(0, 0, 0, 0.12),
+        inset -2px -2px 5px rgba(255, 255, 255, 0.9);
+
+    /* ---------- Layout ---------- */
+    --gutter: 3.5vw;
+    --top-space: 5.5rem;
+
+    /* ---------- Layers ---------- */
+    --z-nav: 500;
+    --z-lightbox: 1000;
+}
 /* ---------- Base ---------- */
 * {
     margin: 0;
@@ -7,9 +48,9 @@
 
 body {
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    background: #f9f9f9;
-    color: #111;
-    padding: 5.5rem 3.5vw 4rem;
+    background: var(--bg);
+    color: var(--text-color-h);
+    padding: var(--top-space) var(--gutter) 4rem;
 }
 
 
@@ -30,8 +71,8 @@ header.hero {
 
     /* full-screen size, reaching past the body padding */
     min-height: 100svh;
-    margin: -5.5rem -3.5vw 0;
-    padding: 0 3.5vw;
+     margin: calc(var(--top-space) * -1) calc(var(--gutter) * -1) 0;
+    padding: 0 var(--gutter);
 
     /* name on the left, paragraph on the right, both vertically centered */
     display: flex;
@@ -46,10 +87,11 @@ header.hero {
 header.hero h1 {
     position: relative;
     z-index: 1;
-    font-size: clamp(3.5rem, 13vw, 2rem);
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
     line-height: .9;
     letter-spacing: -0.04em;
     text-align:center;
+    color: var(--text-color-h);
 }
 
 header.hero p {
@@ -58,7 +100,7 @@ header.hero p {
     flex: 0 1 28rem;                    /* paragraph column: up to 28rem wide, shrinks if needed */
     font-size: 1.2rem;
     line-height: 1.6;
-    color: #838383;
+    color: var(--text-color-p);
     text-align: center;                   /* use right to align the text to the right edge */
 }
 
@@ -66,7 +108,7 @@ header p {
     max-width: 50ch;
     font-size: 1.4rem;
     line-height: 1.6;
-    color: #666;
+    color: var(--text-color-p);
 }
 
 /* ---------- Hero intro animation ---------- */
@@ -79,7 +121,7 @@ header.hero p {
 
 header.hero h1.focus,
 header.hero p.focus {
-    animation: hero-focus 2.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: hero-focus 2.4s var(--ease-out) both;
 }
 
 @keyframes hero-focus {
@@ -170,10 +212,10 @@ header.hero.static p {
     position: relative;               /* lets the info panel float over the image */
     background: none;                 /* no more white box */
     border: none;
-    border-radius: 10px;
+    border-radius: var(--radius-card);
     cursor: pointer;
     overflow: visible;                /* so the soft shadows aren't clipped */
-    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.4s var(--ease-out);
 }
 
 .project-card:hover {
@@ -187,7 +229,7 @@ header.hero.static p {
 }
 
 .project-card.in-view {
-    animation: card-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation: card-in var(--speed-slow) var(--ease-out) backwards;
     animation-delay: calc(var(--i, 0) * 120ms);   /* staggers cards within a row */
 }
 
@@ -212,7 +254,7 @@ header.hero.static p {
     width: 100%;
     aspect-ratio: 1 / 1;
     object-fit: cover;
-    border-radius: 10px;
+    border-radius: var(--radius-card);
     background: #ddd;
 }
 
@@ -224,12 +266,12 @@ header.hero.static p {
     width: fit-content;               /* smaller: only as wide as the text */
     max-width: calc(100% - 2rem);
     padding: 0.7rem 1.1rem;
-    border-radius: 14px;
+    border-radius: var(--radius-panel);
 
     /* frosted glass */
-    background: rgba(240, 240, 243, 0.55);
-    backdrop-filter: blur(14px) saturate(140%);
-    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
 
     /* neumorphic: a dark shadow bottom-right, a light one top-left */
     box-shadow:
@@ -243,7 +285,7 @@ header.hero.static p {
     font-size: 0.7rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #666;
+    color: var(--text-color-project-info-p);
     margin-bottom: 0.15rem;
 }
 
@@ -251,20 +293,20 @@ header.hero.static p {
     font-size: 1rem;
     font-weight: 700;
     letter-spacing: -0.01em;
-    color: #222;
+    color: var(--text-project-info-h3);
 }
 /* ---------- Navigation bar ---------- */
 
 /* Invisible hover zone: sized by the bar plus the padding, centered at the top */
 .nav-zone {
     --nav-speed: 2.1s;                                  /* one speed for everything */
-    --nav-ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --nav-ease: var(--ease-out); 
 
     position: fixed;
     top: 0;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 500;                                       /* above the page, below the lightbox (1000) */
+    z-index: var(--z-nav);                                       /* above the page, below the lightbox (1000) */
     padding: 1.2rem 3rem 3rem;                          /* top | left+right | bottom = trigger buffer */
 }
 
@@ -273,19 +315,16 @@ header.hero.static p {
     align-items: center;
     gap: 0.3rem;
     padding: 0.4rem;
-    border-radius: 999px;
+     border-radius: var(--radius-pill);
 
     /* frosted glass */
-    background: rgba(240, 240, 243, 0.55);
-    backdrop-filter: blur(14px) saturate(140%);
-    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
 
     /* neumorphic: raised */
     border: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow:
-        6px 6px 14px rgba(0, 0, 0, 0.12),
-        -5px -5px 12px rgba(255, 255, 255, 0.8),
-        inset 1px 1px 1px rgba(255, 255, 255, 0.6);
+    box-shadow: var(--shadow-raised);
 
     /* hidden state: slid up, transparent */
     opacity: 0;
@@ -338,7 +377,7 @@ header.hero.static p {
     letter-spacing: 0.1em;
     text-transform: uppercase;
     text-decoration: none;
-    color: #555;
+    color: var(--text-color-nav-link);
     background: none;
     border: none;
     padding: 0.6rem 1.2rem;
@@ -350,10 +389,8 @@ header.hero.static p {
 /* hover and current page: look pressed in */
 .nav-link:hover,
 .nav-link.active {
-    color: #111;
-    box-shadow:
-        inset 2px 2px 5px rgba(0, 0, 0, 0.12),
-        inset -2px -2px 5px rgba(255, 255, 255, 0.9);
+        color: var(--text-color-nav-link);
+    box-shadow: var(--shadow-pressed);
 }
 
 /* Contact dropdown */
@@ -398,17 +435,15 @@ header.hero.static p {
     letter-spacing: 0.1em;
     text-transform: uppercase;
     text-decoration: none;
-    color: #555;
+    color: var(--text-color-nav-link);
     padding: 0.7rem 1rem;
     border-radius: 12px;
     transition: box-shadow 0.3s ease, color 0.3s ease;
 }
 
 .contact-menu a:hover {
-    color: #111;
-    box-shadow:
-        inset 2px 2px 5px rgba(0, 0, 0, 0.12),
-        inset -2px -2px 5px rgba(255, 255, 255, 0.9);
+    color: var(--text-color-nav-link);
+    box-shadow: var(--shadow-pressed);
 }
 
 /* About page */
@@ -426,7 +461,7 @@ header.hero.static p {
 .about p {
     font-size: 1.2rem;
     line-height: 1.7;
-    color: #444;
+    color: var(--text-color-p);
     margin-bottom: 1.2rem;
 }
 /* ---------- Lightbox ---------- */
@@ -440,12 +475,12 @@ header.hero.static p {
     align-content: center;              /* centers the row vertically, sized to the image */
     align-items: center;                 /* text aligns to the top of the image */
     padding: 0 5vw;
-    background: rgba(228, 3, 3, 0);
+    background: rgba(224, 224, 224, 0);
     backdrop-filter: blur(0px);
     opacity: 0;
     visibility: hidden;
     cursor: zoom-out;
-    z-index: 1000;
+    z-index: var(--z-lightbox);
     pointer-events: none;
     /* closing: fade out, then hide */
     transition:
@@ -472,14 +507,14 @@ header.hero.static p {
     display: block;
     max-width: 70vw;
     max-height: 70vh;
-    border-radius: 10px;
+    border-radius: var(--radius-card);
     box-shadow: 0 30px 50px rgba(0, 0, 0, 0.5);
     /* closed state: small, pushed back */
     transform: scale(0.6) translateY(30px);
     opacity: 0;
     transition:
-        transform 0.5s cubic-bezier(0.4, 0, 0.2, 1),
-        opacity 0.4s ease;
+       transform var(--speed-slow) var(--ease-out), 
+       opacity var(--speed-med) ease;
 }
 
 .lightbox.active img {
@@ -492,7 +527,7 @@ header.hero.static p {
 }
 
 .lightbox p {
-    color: #262626;
+    color: var(--text-color-h);
     margin: 0;
     font-size: 1.1rem;
     line-height: 1.7;
@@ -533,7 +568,7 @@ header.hero.static p {
     font-size: 0.8rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: #262626;
+    color: var(--text-color-lightbox-header);
     pointer-events: none;        /* clicks pass through to the lightbox */
     opacity: 0;
     transform: translateY(-10px);

@@ -23,7 +23,6 @@ async function initNav() {
             <div class="nav-contact">
                 <button type="button" class="nav-link" id="contact-btn" aria-expanded="false">Contact</button>
                 <div class="contact-menu" id="contact-menu">
-                    <a href="sms:${site.phone}">Text</a>
                     <a href="mailto:${site.email}">Email</a>
                 </div>
             </div>

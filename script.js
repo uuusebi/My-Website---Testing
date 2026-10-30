@@ -55,7 +55,7 @@ function typeText(text) {
     typingTimer = setTimeout(typeNextChar, TYPING_START_DELAY);
 }
 // ---------- Audio ----------
-const AUDIO_VOLUME = 0.6; // 0 to 1
+const AUDIO_VOLUME = 0.4; // 0 to 1
 const FADE_MS = 800;      // how long the fade in / out takes
 let currentAudio = null;  // the song playing right now (if any)
 
