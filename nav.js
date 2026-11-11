@@ -1,88 +1,53 @@
+/* ============================================================
+   nav.js: builds the top bar on every page
+   Layout:  [ Sebastian Nunez ]   Work  About  Contact   [ Archive  Instagram ]
+   Load it once per page, at the bottom of <body>.
+   ============================================================ */
+
 async function initNav() {
-    // Load contact info from site.json
-    let site = { email: '', phone: '' };
+    // Safety net: if this script is ever loaded twice, don't build a second bar.
+    // (Two stacked bars was what made "Work" and the name look like outlines.)
+    // The flag has to be set right away, before the fetch below, because a
+    // second copy of the script would otherwise run before the first bar exists.
+    if (window.navReady) return;
+    window.navReady = true;
+
+    // Load contact info and social links from site.json
+    let site = {};
     try {
         const response = await fetch('site.json');
         site = await response.json();
     } catch (error) {
-        console.error('Could not load site.json:', error);
+        console.error('Could not load site.json:', error);   // the bar still builds, just without Instagram
     }
 
-    // Figure out which page we're on, so the right link shows as active
-    const page = location.pathname.split('/').pop() || 'index.html';
-    const active = (file) => (page === file ? ' active' : '');
+    // Which page are we on? "about.html", "/about" and "/about/" all become "about"
+    const page = (location.pathname.split('/').pop() || 'index').replace('.html', '');
 
-    // The hover zone wraps the nav and the handle
-    const zone = document.createElement('div');
-    zone.className = 'nav-zone';
-    zone.innerHTML = `
-        <nav class="navbar">
-            <a href="index.html" class="nav-link${active('index.html')}">Home</a>
-            <a href="about.html" class="nav-link${active('about.html')}">About</a>
+    // Marks the link for the current page, for screen readers and for styling
+    // if you ever want it: a[aria-current="page"] { ... }
+    const current = (name) => (page === name ? ' aria-current="page"' : '');
 
-            <div class="nav-contact">
-                <button type="button" class="nav-link" id="contact-btn" aria-expanded="false">Contact</button>
-                <div class="contact-menu" id="contact-menu">
-                    <a href="mailto:${site.email}">Email</a>
-                </div>
-            </div>
-        </nav>
-        <div class="nav-handle"></div>
+    // The Instagram link comes from the socials list in site.json
+    const instagram = (site.socials || []).find((s) => s.label.toLowerCase() === 'instagram');
+
+    const bar = document.createElement('nav');
+    bar.className = 'topbar';
+    bar.innerHTML = `
+        <a href="index.html" class="topbar-brand">Sebastian Nunez</a>
+
+        <div class="topbar-links">
+            <a href="index.html"${current('index')}>Work</a>
+            <a href="about.html"${current('about')}>About</a>
+            <a href="contact.html"${current('contact')}>Contact</a>
+        </div>
+
+        <div class="topbar-right">
+            <a href="archive.html"${current('archive')}>Archive</a>
+            ${instagram ? `<a href="${instagram.url}" class="topbar-social" target="_blank" rel="noopener">Instagram</a>` : ''}
+        </div>
     `;
-    document.body.prepend(zone);
-
-    const contactBtn = zone.querySelector('#contact-btn');
-    const contactMenu = zone.querySelector('#contact-menu');
-
-    // ---------- Show / hide ----------
-    const HIDE_DELAY = 400;   // ms to wait after the cursor leaves before hiding
-    let hideTimer = null;
-
-    function showNav() {
-        clearTimeout(hideTimer);
-        zone.classList.add('visible');
-    }
-
-    function scheduleHide() {
-        clearTimeout(hideTimer);
-        hideTimer = setTimeout(() => {
-            if (!contactMenu.classList.contains('open')) {   // stay up while the dropdown is open
-                zone.classList.remove('visible');
-            }
-        }, HIDE_DELAY);
-    }
-
-    zone.addEventListener('pointerenter', showNav);
-    zone.addEventListener('pointerleave', (e) => {
-        if (e.pointerType === 'mouse') scheduleHide();
-    });
-
-    // Touch screens: tapping the zone shows the nav, tapping elsewhere hides it
-    document.addEventListener('pointerdown', (e) => {
-        if (!zone.contains(e.target)) {
-            closeContactMenu();
-            clearTimeout(hideTimer);
-            zone.classList.remove('visible');
-        }
-    });
-
-    // ---------- Contact dropdown ----------
-    function closeContactMenu() {
-        contactMenu.classList.remove('open');
-        contactBtn.setAttribute('aria-expanded', 'false');
-        if (!zone.matches(':hover')) scheduleHide();         // hide if the cursor is already away
-    }
-
-    contactBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const isOpen = contactMenu.classList.toggle('open');
-        contactBtn.setAttribute('aria-expanded', isOpen);
-    });
-
-    document.addEventListener('click', closeContactMenu);
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeContactMenu();
-    });
+    document.body.prepend(bar);   // puts the bar at the very top of <body>
 }
 
 initNav();

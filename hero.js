@@ -1,11 +1,17 @@
+/* ============================================================
+   hero.js: the intro animation and scroll-out effect for the big header
+   Used on the home page and the About page.
+   ============================================================ */
+
 (function () {
     const hero = document.querySelector('header.hero');
-    if (!hero) return;                                   // does nothing on the About page
+    if (!hero) return;                                   // pages without a hero do nothing
 
     const title = hero.querySelector('h1');
-    const intro = hero.querySelector('p');
+    const intro = hero.querySelector('p');               // may be empty or missing, and that's fine
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    // ---------- Settings you can tweak ----------
     const START_DELAY = 300;    // ms before anything happens
     const TITLE_SPEED = 90;     // ms per letter for the name
     const INTRO_SPEED = 18;     // ms per letter for the paragraph
@@ -30,6 +36,8 @@
     // Reveals letters one at a time, moving a blinking caret along
     function typeChars(chars, speed) {
         return new Promise((resolve) => {
+            if (chars.length === 0) return resolve();    // nothing to type (empty paragraph), so finish right away
+
             let i = 0;
             function tick() {
                 if (i > 0) chars[i - 1].classList.remove('caret');
@@ -51,16 +59,21 @@
             hero.classList.add('static');                // skip everything, just show the text
             return;
         }
-        const titleChars = splitChars(title);
-        const introChars = splitChars(intro);
 
-        hero.classList.add('ready');                     // starts the grain
+        const titleChars = splitChars(title);
+        const introChars = intro ? splitChars(intro) : [];
+
+        hero.classList.add('ready');                     // starts the film grain
         await wait(START_DELAY);
+
         title.classList.add('focus');                    // blur-to-sharp + fade-in begins
         await typeChars(titleChars, TITLE_SPEED);
-        await wait(150);
-        intro.classList.add('focus');
-        await typeChars(introChars, INTRO_SPEED);
+
+        if (introChars.length > 0) {                     // only animate the paragraph if it has text
+            await wait(150);
+            intro.classList.add('focus');
+            await typeChars(introChars, INTRO_SPEED);
+        }
     }
 
     // ---------- Scroll: blur + fade out ----------
@@ -68,8 +81,8 @@
 
     function updateScroll() {
         const range = window.innerHeight * 0.7;          // scroll distance over which the hero disappears
-        const p = Math.min(Math.max(window.scrollY / range, 0), 1);
-        hero.style.setProperty('--p', p.toFixed(3));
+        const p = Math.min(Math.max(window.scrollY / range, 0), 1);   // progress from 0 to 1
+        hero.style.setProperty('--p', p.toFixed(3));     // CSS reads this to set the blur and opacity
         hero.classList.toggle('gone', p >= 1);           // fully hidden once you reach the content
         ticking = false;
     }

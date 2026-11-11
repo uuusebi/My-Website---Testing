@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact | Sebastian Nunez</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="contact">
+
+        <section class="contact-hero">
+            <h1>We’re available for new projects.</h1>
+            <a class="contact-email" id="contact-email" href="#">
+                <span>→</span><span id="email-text"></span>
+            </a>
+        </section>
+
+        <section class="contact-info">
+            <div class="info-block">
+                <h2>Phone</h2>
+                <a id="info-phone" href="#"></a>
+            </div>
+            <div class="info-block">
+                <h2>Office</h2>
+                <div id="info-location"></div>
+            </div>
+            <div class="info-block">
+                <h2>Socials</h2>
+                <div id="info-socials"></div>
+            </div>
+        </section>
+
+        <form class="contact-form" id="contact-form" action="https://formspree.io/f/xpppgwny" method="POST">
+            <input type="text" name="name" placeholder="Your Name" required>
+            <input type="email" name="email" placeholder="Email" required>
+            <textarea name="message" placeholder="Project Details" required></textarea>
+            <input type="text" name="_gotcha" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+            <button type="submit">Submit</button>
+            <p class="form-status" id="form-status" role="status"></p>
+        </form>
+
+    </main>
+
+    <script src="nav.js"></script>
+    <script src="contact.js"></script>
+</body>
+</html> 

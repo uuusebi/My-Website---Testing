@@ -4,29 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sebastian Nunez</title>
- <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <script src="nav.js"></script>
-     <header class="hero">
+
+    <!-- Full-screen title. hero.js animates it. The empty <p> is room for a tagline. -->
+    <header class="hero">
         <h1>Sebastian Nunez</h1>
-        <p></p>
+        <p>Graphic Design + Animation + Web Development</p>
     </header>
 
-  
+    <!-- script.js fills this with one card per project in projects.json -->
     <main class="portfolio-grid"></main>
 
-    <!-- Popup Window -->
-   <div id="lightbox" class="lightbox" onclick="closeLightbox()">
-    <div class="lightbox-meta">
-        <span id="meta-title"></span>
-        <span id="meta-type"></span>
-        <span id="meta-date"></span>
+    <!-- Popup window. Its contents are filled in by script.js -->
+    <div id="lightbox" class="lightbox" onclick="closeLightbox()">
+        <div class="lightbox-meta">
+            <span id="meta-title"></span>
+            <span id="meta-type"></span>
+            <span id="meta-date"></span>
+        </div>
+        <img id="lightbox-img" src="" alt="Enlarged view">
+        <p id="lightbox-caption"></p>
     </div>
-    <img id="lightbox-img" src="" alt="Enlarged view">
-    <p id="lightbox-caption"></p>
-</div>
 
+    <!-- Each script loads once, here at the bottom. nav.js must NOT also be in the <body> above. -->
     <script src="nav.js"></script>
     <script src="hero.js"></script>
     <script src="script.js"></script>
