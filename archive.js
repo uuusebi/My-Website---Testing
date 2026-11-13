@@ -37,7 +37,9 @@ async function loadArchive() {
             .filter((work) => work.status === 'live')    // hides drafts, like the home grid
             .sort((a, b) => a.count - b.count)           // same order as the home grid
             .forEach((work) => {
-                const row = document.createElement('div');
+                // Each row is a link to the project's page
+                const row = document.createElement('a');
+                row.href = `project.html?slug=${encodeURIComponent(work.slug)}`;
                 row.className = 'archive-row';
 
                 // One <span> per column. textContent keeps odd characters in titles safe.

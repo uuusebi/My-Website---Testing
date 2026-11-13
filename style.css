@@ -2,8 +2,9 @@
    style.css
    1. Variables      2. Base          3. Top bar
    4. Hero           5. Portfolio grid   6. About
-   7. Contact        8. Archive       9. Lightbox
-   10. Responsive    11. Reduced motion
+   7. Contact        8. Archive       9. Work page
+   10. Home          11. Project page
+   12. Responsive    13. Reduced motion
    ============================================================ */
 
 
@@ -21,12 +22,12 @@
     --text-color-p: #838383;                    /* paragraphs */
     --text-color-muted: #999;                   /* small labels */
     --text-color-soft: #888;                    /* secondary text in lists */
-    --text-color-lightbox-header: #848484;
     --text-color-project-info-p: #666;
     --text-color-project-info-h3: #222;
     --text-color-nav: #111;                     /* nav links at rest: all black */
     --text-color-nav-hover: #9a9a9a;            /* nav links while hovered: lighter */
     --line: #e3e3e6;                            /* thin divider lines */
+    --accent: #e0301e;                          /* underline on the previewed project / active filter */
 
     /* Shape */
     --radius-card: 10px;
@@ -53,7 +54,6 @@
     /* Layers (higher number sits on top) */
     --z-preview: 400;
     --z-nav: 500;
-    --z-lightbox: 1000;
 }
 
 
@@ -71,11 +71,6 @@ body {
     padding: var(--top-space) var(--gutter) 4rem;
 }
 
-/* Stops the page scrolling behind the lightbox (script.js adds this class) */
-body.lightbox-open {
-    overflow: hidden;
-}
-
 
 /* ---------- 3. Top bar ----------
    [ brand ]      [ Work  About  Contact ]      [ Archive  Instagram ]   */
@@ -84,7 +79,7 @@ body.lightbox-open {
     top: 0;
     left: 0;
     right: 0;
-    z-index: var(--z-nav);                      /* above the page, below the lightbox */
+    z-index: var(--z-nav);                      /* above the page */
 
     display: grid;
     grid-template-columns: 1fr auto 1fr;        /* equal side columns keep the middle links centered */
@@ -275,6 +270,7 @@ header.hero.static p {
 
 
 /* ---------- 5. Portfolio grid ---------- */
+
 .portfolio-grid {
     position: relative;
     z-index: 1;                                 /* cards sit above the pinned hero */
@@ -294,8 +290,21 @@ header.hero.static p {
     transition: transform 0.4s var(--ease-out);
 }
 
+/* Cards are <a> links to the project page: block-level, no blue underlined text */
+a.project-card {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+}
+
 .project-card:hover {
     transform: translateY(-3px);
+}
+
+/* Visible outline for people navigating with the keyboard */
+.project-card:focus-visible {
+    outline: 2px solid var(--text-color-h);
+    outline-offset: 6px;
 }
 
 /* Reveal: hidden until it scrolls into view (script.js adds .in-view) */
@@ -541,6 +550,17 @@ header.hero.static p {
     border-bottom: 1px solid var(--line);
 }
 
+/* Project rows are <a> links: keep the text black, no underline */
+a.archive-row {
+    color: var(--text-color-h);
+    text-decoration: none;
+}
+
+a.archive-row:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
 .archive-row span:not(:first-child) {
     color: var(--text-color-soft);
 }
@@ -588,213 +608,185 @@ header.hero.static p {
 }
 
 
-/* ---------- 9. Lightbox Layout(the popup) ---------- */
+/* ---------- 9. Work page ----------
+   [ project description ]      [ Selected Work: list ]   [ Filter: list ]
+                      [ big preview of the hovered project ]
+   [ thumb ][ thumb ][ thumb ][ thumb ][ thumb ][ thumb ][ thumb ][ thumb ]   */
 
-/* Lightbox background and layout */
-.lightbox {
-    position: fixed;
-    inset: 0;
+.work {
+    padding-top: 2rem;
+}
 
+/* Top row: three columns */
+.work-top {
     display: grid;
-
-    /* Media takes the available space; description gets 300px */
-    grid-template-columns: minmax(0, 1fr) minmax(0, 300px);
-
-    /* Space between media and description */
-    column-gap: clamp(2rem, 4vw, 4rem);
-
-    /* Center the two columns */
-    justify-content: center;
-    align-content: center;
-    align-items: center;
-
-    /* Keep everything away from the browser edges */
-    padding: 6rem 5vw 3rem;
-
-    box-sizing: border-box;
-
-    /* Prevent the content from exceeding the screen */
-    width: 100%;
-    height: 100%;
-    overflow-y: auto;
-
-    background: rgba(224, 224, 224, 0);
-    backdrop-filter: blur(0px);
-
-    opacity: 0;
-    visibility: hidden;
-    cursor: zoom-out;
-    z-index: var(--z-lightbox);
-    pointer-events: none;
-
-    transition:
-        opacity 0.4s ease,
-        background 0.5s ease,
-        backdrop-filter 0.5s ease,
-        visibility 0s linear 0.5s;
-}
-
-
-.lightbox.active {
-    opacity: 1;
-    visibility: visible;
-    background: rgba(224, 224, 224, 0.85);
-    backdrop-filter: blur(10px);
-    pointer-events: auto;
-    transition:
-        opacity 0.5s ease,
-        background 0.6s ease,
-        backdrop-filter 0.6s ease,
-        visibility 0s;
-}
-
-
-/* Shared image and video styling */
-.lightbox img,
-.lightbox video {
-    display: block;
-
-    /* Never exceed the available column width */
-    width: 100%;
-    max-width: 100%;
-
-    /* Keep media inside the available screen height */
-    max-height: 65vh;
-
-    /* Preserve the original proportions */
-    object-fit: contain;
-
-    border-radius: var(--radius-card);
-    box-shadow: 0 30px 50px rgba(0, 0, 0, 0.5);
-
-    /* Closed animation state */
-    transform: scale(0.6) translateY(30px);
-    opacity: 0;
-
-    transition:
-        transform var(--speed-slow) var(--ease-out),
-        opacity var(--speed-med) ease;
-}
-
-
-
-
-.lightbox video {
-    width: auto;
-    height: auto;
-    max-width: 70vw;
-    max-height: 70vh;
-    object-fit: contain;
-}
-
-.lightbox.active img,
-.lightbox.active video {
-    /* open state: pops forward */
-    transform: scale(1) translateY(0);
-    opacity: 1;
-    transition:
-        transform var(--speed-slow) var(--ease-out),
-        opacity var(--speed-med) ease;
-}
-
-
-
-/* Project description */
-.lightbox p {
-    width: 100%;
-    min-width: 0;
-    max-width: 100%;
-
-    /* Keep text inside its column */
-    overflow-wrap: anywhere;
-    word-break: normal;
-
-    color: var(--text-color-h);
-    margin: 0;
-
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto;
+    gap: 3rem;
+    align-items: start;
     font-size: 1.1rem;
-    line-height: 1.7;
-    text-align: left;
-
-    /* Allow long descriptions to scroll independently */
-    max-height: 65vh;
-    overflow-y: auto;
-
-    /* Prevent text from touching the column edge */
-    padding-right: 0.5rem;
-
-    opacity: 0;
-    transform: translateY(10px);
-
-    transition:
-        opacity 0.3s ease,
-        transform 0.3s ease;
+    line-height: 1.35;
 }
 
-/* Description opening animation */
-.lightbox.active p {
-    opacity: 1;
-    transform: translateY(0);
-
-    transition:
-        opacity 0.6s ease 0.35s,
-        transform 0.6s ease 0.35s;
+/* Gray "Selected Work:" / "Filter:" labels that sit beside their lists */
+.work-label {
+    color: var(--text-color-muted);
+    white-space: nowrap;
 }
 
-
-/* Description opening animation */
-.lightbox.active p {
-    opacity: 1;
-    transform: translateY(0);
-
-    transition:
-        opacity 0.6s ease 0.35s,
-        transform 0.6s ease 0.35s;
+/* Left: description of the previewed project */
+.work-desc {
+    max-width: 36rem;
 }
 
-.lightbox.active p {
-    opacity: 1;
-    transform: translateY(0);
-    /* the description appears after the image lands */
-    transition: opacity 0.6s ease 0.35s, transform 0.6s ease 0.35s;
+.work-desc h1 {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.work-desc-meta {
+    color: var(--text-color-muted);
+    margin-bottom: 1rem;
+}
+
+/* A fixed height so the page doesn't jump while a description types in */
+#work-caption {
+    min-height: calc(1.35em * 8);
 }
 
 /* Blinking cursor shown while the description is being typed */
-.lightbox p.typing::after {
+#work-caption.typing::after {
     content: "|";
     margin-left: 2px;
     animation: blink 0.7s steps(1) infinite;
 }
 
-/* Title / type / date, stacked at the top right of the lightbox */
-.lightbox-meta {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+/* Middle and right: label beside its list */
+.work-list,
+.work-filter {
     display: flex;
-    flex-direction: column;                     /* stacks title, type, and date vertically */
-    align-items: flex-end;                      /* pushes them to the right edge */
-    gap: 0.3rem;
-    padding: 2rem 5vw;
-    font-size: 0.8rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-color-lightbox-header);
-    pointer-events: none;                       /* clicks pass through to the lightbox */
+    gap: 0.6rem;
+}
+
+.work-list ul,
+.work-filter ul {
+    list-style: none;
+}
+
+.work-list a,
+.work-filter button {
+    color: var(--text-color-h);
+    text-decoration: none;
+    font: inherit;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-align: left;
+    transition: opacity 0.3s ease;
+}
+
+/* The project being previewed, and the chosen filter, get an underline */
+.work-list a.active,
+.work-filter button.active {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: 2px;
+}
+
+/* Filtered out: faded and not clickable (works for list items and thumbnails) */
+.work .dimmed {
+    opacity: 0.15;
+    pointer-events: none;
+}
+
+/* Preview stage: a fixed-height box, so swapping images never moves the grid below */
+.work-stage {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: clamp(240px, 42vh, 520px);
+    margin: 6vh 0;
+}
+
+.work-stage a {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    max-width: 100%;
+}
+
+/* width/height auto + max limits = the media keeps its own proportions and fits the box */
+.work-stage img,
+.work-stage video {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
+    transition: opacity 0.25s ease;
+}
+
+/* The display: block above would beat the HTML hidden attribute, so restore it */
+.work-stage [hidden] {
+    display: none;
+}
+
+/* Hidden until the new file has loaded, then fades in (script.js toggles .loading) */
+.work-stage .loading {
     opacity: 0;
-    transform: translateY(-10px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-.lightbox.active .lightbox-meta {
+/* Thumbnail grid: small, every image of every project */
+.work-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 3vw 2.5vw;
+    padding-bottom: 4rem;
+}
+
+.thumb {
+    display: block;
+    color: var(--text-color-muted);             /* alt text (while an image loads) isn't blue */
+    text-decoration: none;
+    transition: opacity 0.3s ease;
+    animation: thumb-in var(--speed-slow) var(--ease-out) backwards;
+    animation-delay: calc(var(--i, 0) * 40ms);   /* thumbnails appear one after another */
+}
+
+/* Square cell, but the image inside keeps its real proportions (no cropping) */
+.thumb img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: contain;
+}
+
+/* While the mouse is over the grid, the other thumbnails fade back slightly */
+.work-grid:hover .thumb {
+    opacity: 0.45;
+}
+
+.work-grid .thumb:hover,
+.work-grid .thumb.dimmed:hover {
     opacity: 1;
-    transform: translateY(0);
-    transition: opacity 0.6s ease 0.2s, transform 0.6s ease 0.2s;
 }
 
-.lightbox-meta #meta-title {
-    font-weight: 700;
+.work-grid:hover .thumb.dimmed {
+    opacity: 0.15;
+}
+
+.thumb:focus-visible,
+.work-list a:focus-visible,
+.work-filter button:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+@keyframes thumb-in {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 
@@ -815,7 +807,228 @@ header.hero.static p {
 }
 
 
-/* ---------- 10. Responsive ----------
+/* ---------- 10. Home page ---------- */
+.home {
+    position: relative;
+    z-index: 1;                                 /* slides over the pinned hero, like the cards do */
+}
+
+/* Small uppercase label above each section ("Services", "Selected Work") */
+.section-label {
+    font-size: 0.8rem;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-color-muted);
+}
+
+/* Services: three columns, each with a ruled line on top (like the Contact info blocks) */
+.services {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.2rem;
+    padding: 12vh 0;
+}
+
+.services .section-label {
+    grid-column: 1 / -1;                        /* the label spans all three columns */
+    margin-bottom: 2rem;
+}
+
+.service {
+    border-top: 1px solid var(--line);
+    padding-top: 1rem;
+}
+
+.service h3 {
+    font-size: clamp(1.4rem, 2.4vw, 2rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.8rem;
+}
+
+.service p {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: var(--text-color-p);
+    max-width: 32ch;
+}
+
+/* Featured work */
+.featured-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 2rem;
+}
+
+/* Underlined text link that lightens on hover (used for "See all work") */
+.text-link {
+    color: var(--text-color-h);
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+    transition: color 0.3s ease;
+}
+
+.text-link:hover {
+    color: var(--text-color-nav-hover);
+}
+
+/* Contact call-to-action: big type, same feel as the Contact page email */
+.home-cta {
+    padding: 18vh 0 8vh;
+}
+
+.home-cta p {
+    font-size: 1.2rem;
+    color: var(--text-color-p);
+    margin-bottom: 0.6rem;
+}
+
+.cta-link {
+    font-size: clamp(2.2rem, 6vw, 5.5rem);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: #c9c9cc;
+    text-decoration: none;
+    transition: color 0.4s ease;
+}
+
+.cta-link:hover {
+    color: var(--text-color-h);
+}
+
+
+/* ---------- 11. Project page ---------- */
+.project-page {
+    padding-top: 12vh;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Title on the left, client / type / date on the right */
+.project-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 2rem;
+    margin-bottom: 4rem;
+}
+
+.project-head h1 {
+    font-size: clamp(2.2rem, 6vw, 5.5rem);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.04em;
+}
+
+.project-meta {
+    display: flex;
+    gap: 2.5rem;
+}
+
+.project-meta dt {
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-color-muted);
+    margin-bottom: 0.3rem;
+}
+
+.project-meta dd {
+    font-size: 1rem;
+}
+
+/* Main image or video: as large as fits, never cropped */
+.project-hero-media img,
+.project-hero-media video,
+.project-gallery img,
+.project-gallery video {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-card);
+}
+
+.project-hero-media img,
+.project-hero-media video {
+    max-height: 85vh;
+    object-fit: contain;                        /* fits inside the box without cropping */
+}
+
+.project-body {
+    max-width: 60ch;
+    margin: 5rem 0;
+}
+
+.project-body p {
+    font-size: 1.2rem;
+    line-height: 1.7;
+    color: var(--text-color-h);
+}
+
+/* Play / pause button for projects with a song */
+.project-audio {
+    margin-top: 2rem;
+    font: inherit;
+    font-size: 1rem;
+    color: var(--text-color-h);
+    background: #efefef;
+    border: none;
+    border-radius: var(--radius-pill);
+    padding: 0.8rem 1.6rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.project-audio:hover {
+    background: #e2e2e2;
+}
+
+/* Extra images: two per row */
+.project-gallery {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+}
+
+/* Previous | All work | Next */
+.project-nav {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 1rem;
+    margin-top: 8rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--line);
+}
+
+.project-nav a {
+    color: var(--text-color-h);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.project-nav a:hover {
+    color: var(--text-color-nav-hover);
+}
+
+.project-nav a:last-child {
+    justify-self: end;                          /* Next sits at the far right */
+}
+
+/* Shown when a project can't be found */
+.project-missing p {
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+}
+
+.project-missing a {
+    color: var(--text-color-soft);
+}
+
+
+/* ---------- 12. Responsive ----------
    A @media block applies its rules ONLY at that screen size. Every rule that belongs to a
    screen size goes inside ONE block, and that block's closing curly brace goes last. */
 
@@ -823,6 +1036,19 @@ header.hero.static p {
 @media (max-width: 1000px) {
     .portfolio-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Work page: description on its own row above the list and filter */
+    .work-top {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .work-desc {
+        grid-column: 1 / -1;
+    }
+
+    .work-grid {
+        grid-template-columns: repeat(6, 1fr);
     }
 }
 
@@ -862,39 +1088,57 @@ header.hero.static p {
         font-size: 1.1rem;
     }
 
-    
-/* Lightbox on smaller screens */
-.lightbox {
-    grid-template-columns: minmax(0, 1fr);
-    justify-items: center;
+    /* Work page: list and filter stack, labels above their lists, 4 thumbnails per row */
+    .work-top {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
 
-    /* Reduce the gap between the media and description */
-    row-gap: 1.5rem;
+    .work-list,
+    .work-filter {
+        flex-direction: column;
+        gap: 0.3rem;
+    }
 
-    /* Keep comfortable spacing around the screen edges */
-    padding: 6rem 6vw 2rem;
-}
+    .work-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 4vw;
+    }
 
-/* Both images and videos fit the mobile screen */
-.lightbox img,
-.lightbox video {
-    width: 100%;
-    max-width: 88vw;
-    max-height: 45vh;
-}
+    /* Home: services stack into one column */
+    .services {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
 
-/* Description uses the full available mobile width */
-.lightbox p {
-    width: 100%;
-    max-width: 88vw;
-    max-height: 35vh;
-}
+    .services .section-label {
+        margin-bottom: 0;
+    }
 
-/* Metadata stays away from the screen edges */
-.lightbox-meta {
-    padding: 1.5rem 6vw;
-}
+    /* Project page: title above the meta, gallery one image per row */
+    .project-head {
+        flex-direction: column;
+        align-items: flex-start;
+        margin-bottom: 2.5rem;
+    }
 
+    .project-meta {
+        gap: 1.5rem;
+    }
+
+    .project-body {
+        margin: 3rem 0;
+    }
+
+    .project-gallery {
+        grid-template-columns: 1fr;
+        gap: 1.2rem;
+    }
+
+    .project-nav {
+        margin-top: 4rem;
+        font-size: 0.95rem;
+    }
 
     /* Contact page: everything in one column */
     .contact-info {
@@ -922,15 +1166,31 @@ header.hero.static p {
     }
 }
 
-/* Screens with no hover (phones, tablets): no preview image */
+/* Small phones: one big card per row, easy to tap */
+@media (max-width: 600px) {
+    .portfolio-grid {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+    }
+}
+
+/* Screens with no hover (phones, tablets): no preview image.
+   On the Work page, taps go straight to the project page, so the
+   hover-only description and preview stage are hidden too. */
 @media (hover: none) {
-    .archive-preview {
+    .archive-preview,
+    .work-desc,
+    .work-stage {
         display: none;
+    }
+
+    .work-grid {
+        margin-top: 3rem;
     }
 }
 
 
-/* ---------- 11. Reduced motion ----------
+/* ---------- 13. Reduced motion ----------
    For people who turn off animations in their system settings. */
 @media (prefers-reduced-motion: reduce) {
     .project-card.reveal:not(.in-view) {
@@ -938,7 +1198,8 @@ header.hero.static p {
         transform: none;
     }
 
-    .project-card.in-view {
+    .project-card.in-view,
+    .thumb {
         animation: none;
     }
 }

@@ -1,6 +1,7 @@
 /* ============================================================
    nav.js: builds the top bar on every page
    Layout:  [ Sebastian Nunez ]   Work  About  Contact   [ Archive  Instagram ]
+   The name links to the Home page (index.html); Work goes to work.html.
    Load it once per page, at the bottom of <body>.
    ============================================================ */
 
@@ -34,10 +35,10 @@ async function initNav() {
     const bar = document.createElement('nav');
     bar.className = 'topbar';
     bar.innerHTML = `
-        <a href="index.html" class="topbar-brand">Sebastian Nunez</a>
+        <a href="index.html" class="topbar-brand"${current('index')}>Sebastian Nunez</a>
 
         <div class="topbar-links">
-            <a href="index.html"${current('index')}>Work</a>
+            <a href="work.html"${current('work')}>Work</a>
             <a href="about.html"${current('about')}>About</a>
             <a href="contact.html"${current('contact')}>Contact</a>
         </div>

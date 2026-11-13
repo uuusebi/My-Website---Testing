@@ -7,6 +7,8 @@
   "client": "ilyvirato",
   "category": "Cover Art",
   "image": "projects/ilyvirato/dynama/dynama_2.png",
+  "gallery": ["projects/ilyvirato/dynama/dynama_1.png"],
+  "featured": true,
   "date": "2023-09-15",
   "description": "dynama is a project that explores the concept of energy and movement through visual art. The project features a series of dynamic images that capture the essence of motion and power. Each piece is designed to evoke a sense of energy and vitality, inviting viewers to experience the thrill of movement in a static form."
 },
@@ -18,6 +20,7 @@
   "client": "ilyvirato",
   "category": "Cover Art for EP",
   "image": "projects/ilyvirato/heavenly/heavenly_cover.png",
+  "featured": true,
   "date": "2023-09-15",
   "description": "heavenly is a project that delves into the realm of celestial beauty and divine inspiration. Through a collection of ethereal visuals, the project aims to capture the sublime essence of the heavens, offering viewers a glimpse into the transcendent world of cosmic wonder."
 },
@@ -30,6 +33,7 @@
   "client": "spec project",
   "category": "Cover Art",
   "image": "projects/geese/getting killed/getting killed_front.png",
+  "featured": true,
   "description": "Geese are one of the most dangerous animals in the world. They are known to attack humans and other animals without warning. In this project, we explore the dangers of geese and how to protect yourself from them. I love geese.",
   "audio": "projects/geese/getting killed/getting killed.mp3"
 },
@@ -52,7 +56,7 @@
   "client": "ilyvirato",
   "category": "Cover Art",
   "image": "projects/ilyvirato/mirage/mirage_cover.png",
-  "video": "projects/ilyvirato/mirage/mirage_visualizer.mp4",
+  "video": "",
   "date": "2023-09-15",
   "description": "Mirage is a project that explores the concept of dreams that come once seemed like a distant concept coming into fruition."
 }

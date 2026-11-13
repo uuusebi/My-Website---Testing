@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work | Sebastian Nunez</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <main class="work">
+
+        <!-- Top row: description of the previewed project | project list | category filter.
+             script.js fills all three from projects.json -->
+        <section class="work-top">
+            <div class="work-desc" aria-live="polite">
+                <h1 id="work-title">Work</h1>
+                <p id="work-meta" class="work-desc-meta"></p>
+                <p id="work-caption"></p>
+            </div>
+
+            <nav class="work-list" aria-label="Projects">
+                <span class="work-label">Selected Work:</span>
+                <ul id="work-list"></ul>
+            </nav>
+
+            <div class="work-filter">
+                <span class="work-label">Filter:</span>
+                <ul id="work-filter"></ul>
+            </div>
+        </section>
+
+        <!-- Preview stage: shows the hovered project. Clicking it opens the project page.
+             Hidden from screen readers and the Tab key because the list and thumbnails already link there -->
+        <section class="work-stage" aria-hidden="true">
+            <a id="stage-link" href="#" tabindex="-1">
+                <img id="stage-img" alt="">
+                <video id="stage-video" muted loop playsinline hidden></video>
+            </a>
+        </section>
+
+        <!-- Thumbnail grid: every image of every project -->
+        <section class="work-grid" id="work-grid"></section>
+
+    </main>
+
+    <!-- Each script loads once, here at the bottom. -->
+    <script src="nav.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

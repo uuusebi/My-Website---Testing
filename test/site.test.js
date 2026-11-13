@@ -32,11 +32,28 @@ describe('portfolio site', () => {
                     `missing project audio: ${project.audio}`
                 );
             }
+
+            for (const file of project.gallery || []) {
+                assert.ok(
+                    fs.existsSync(path.join(root, file)),
+                    `missing gallery file: ${file}`
+                );
+            }
         }
     });
 
+    it('gives every live project a unique slug for its project page', () => {
+        const live = readJson('projects.json').filter((item) => item.status === 'live');
+        const slugs = live.map((project) => project.slug);
+
+        for (const slug of slugs) {
+            assert.ok(typeof slug === 'string' && slug.length > 0, 'live projects need a slug');
+        }
+        assert.equal(new Set(slugs).size, slugs.length, 'project slugs must be unique');
+    });
+
     it('has existing local assets linked from each page', () => {
-        for (const page of ['index.html', 'about.html']) {
+        for (const page of ['index.html', 'about.html', 'work.html', 'project.html', 'contact.html', 'archive.html']) {
             const html = fs.readFileSync(path.join(root, page), 'utf8');
             const references = html.matchAll(/\b(?:src|href)\s*=\s*["']([^"']+)["']/g);
 

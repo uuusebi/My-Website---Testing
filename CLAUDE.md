@@ -14,12 +14,14 @@
 
 # Folder Structure
 Everything lives at the project root (no `/src`):
-- **Pages:** `index.html` (Work), `about.html`, `contact.html`, `archive.html`
+- **Pages:** `index.html` (Home: hero, services, featured work, contact CTA), `work.html` (project description + title list + filter, a preview stage, and a dense thumbnail grid), `project.html` (one template for every project, `?slug=…`), `about.html`, `contact.html`, `archive.html`
 - **Styles:** `style.css`, one shared stylesheet. Design tokens (colors, radii, glass, shadows, easing) are in `:root` at the top.
 - **Scripts:** one file per job, loaded at the bottom of `<body>`:
   - `nav.js`: builds the top bar on every page from `site.json`
   - `hero.js`: hero intro animation and scroll-out effect (Home and About)
-  - `script.js`: Work grid and project lightbox, built from `projects.json`
+  - `script.js`: Work page. Hovering a thumbnail or title (mouse only) previews it on the stage and types its description; thumbnails and titles are `<a>` links to the project page. Also builds the category filter.
+  - `home.js`: Home page featured strip (`"featured": true` projects) and contact CTA
+  - `project.js`: builds a project page from its slug (main media, description, optional `gallery`, prev/next)
   - `archive.js`: Archive list with a preview image that follows the cursor
   - `contact.js`: fills in the Contact page from `site.json`
 - **Data:**

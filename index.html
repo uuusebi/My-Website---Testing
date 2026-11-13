@@ -14,24 +14,48 @@
         <p>Graphic Design + Animation + Web Development</p>
     </header>
 
-    <!-- script.js fills this with one card per project in projects.json -->
-    <main class="portfolio-grid"></main>
+    <main class="home">
 
-    <!-- Popup window. Its contents are filled in by script.js -->
-    <div id="lightbox" class="lightbox" onclick="closeLightbox()">
-        <div class="lightbox-meta">
-            <span id="meta-title"></span>
-            <span id="meta-type"></span>
-            <span id="meta-date"></span>
-        </div>
-        <img id="lightbox-img" src="" alt="Enlarged view" style="display: none;">
-        <video id="lightbox-video" controls autoplay muted loop playsinline style="display: none;" onclick="event.stopPropagation()"></video>        
-        <p id="lightbox-caption"></p>
-    </div>
+        <!-- Services: placeholder copy, rewrite each line in your own words -->
+        <section class="services">
+            <h2 class="section-label">Services</h2>
+
+            <div class="service">
+                <h3>Graphic Design</h3>
+                <p>Album covers, single artwork, posters and promotional materials for artists and brands.</p>
+            </div>
+
+            <div class="service">
+                <h3>Animation</h3>
+                <p>Visualizers, motion graphics and music videos that bring a release to life.</p>
+            </div>
+
+            <div class="service">
+                <h3>Web Development</h3>
+                <p>Custom, hand-built websites with interactive animation.</p>
+            </div>
+        </section>
+
+        <!-- Featured work: home.js fills this with projects marked "featured": true in projects.json -->
+        <section class="featured">
+            <div class="featured-head">
+                <h2 class="section-label">Selected Work</h2>
+                <a href="work.html" class="text-link">See all work →</a>
+            </div>
+            <div class="portfolio-grid" id="featured-grid"></div>
+        </section>
+
+        <!-- Contact call-to-action. home.js fills in the location line from site.json -->
+        <section class="home-cta">
+            <p id="cta-location">Available for new projects.</p>
+            <a href="contact.html" class="cta-link">Let's work together →</a>
+        </section>
+
+    </main>
 
     <!-- Each script loads once, here at the bottom. nav.js must NOT also be in the <body> above. -->
     <script src="nav.js"></script>
     <script src="hero.js"></script>
-    <script src="script.js"></script>
+    <script src="home.js"></script>
 </body>
 </html>
