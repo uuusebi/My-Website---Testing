@@ -6,7 +6,7 @@
   "slug": "dynama",
   "client": "ilyvirato",
   "category": "Cover Art",
-  "image": "images/ilyvirato/dynama/dynama_2.png",
+  "image": "projects/ilyvirato/dynama/dynama_2.png",
   "date": "2023-09-15",
   "description": "dynama is a project that explores the concept of energy and movement through visual art. The project features a series of dynamic images that capture the essence of motion and power. Each piece is designed to evoke a sense of energy and vitality, inviting viewers to experience the thrill of movement in a static form."
 },
@@ -17,7 +17,7 @@
   "slug": "heavenly",
   "client": "ilyvirato",
   "category": "Cover Art for EP",
-  "image": "images/ilyvirato/heavenly/heavenly_cover.png",
+  "image": "projects/ilyvirato/heavenly/heavenly_cover.png",
   "date": "2023-09-15",
   "description": "heavenly is a project that delves into the realm of celestial beauty and divine inspiration. Through a collection of ethereal visuals, the project aims to capture the sublime essence of the heavens, offering viewers a glimpse into the transcendent world of cosmic wonder."
 },
@@ -29,8 +29,31 @@
   "slug": "getting-killed",
   "client": "spec project",
   "category": "Cover Art",
-  "image": "images/geese/getting killed/getting killed_front.png",
+  "image": "projects/geese/getting killed/getting killed_front.png",
   "description": "Geese are one of the most dangerous animals in the world. They are known to attack humans and other animals without warning. In this project, we explore the dangers of geese and how to protect yourself from them. I love geese.",
-  "audio": "images/geese/getting killed/getting killed.mp3"
+  "audio": "projects/geese/getting killed/getting killed.mp3"
+},
+{
+"title": "MAY FLOWER",
+  "status": "live",
+  "count": 4,
+  "slug": "may-flower",
+  "client": "ilyvirato",
+  "category": "Cover Art",
+  "image": "projects/ilyvirato/may_flowers/may_flowers_cover.png",
+  "date": "2023-09-15",
+  "description": "Wall flower is ilyvirato's latest single, and the cover art is a visual representation of the song's themes. The artwork features a delicate flower in full bloom, symbolizing growth, beauty, and resilience. The vibrant colors and intricate details of the flower reflect the emotional depth and complexity of the music, creating a captivating visual experience for listeners."
+},
+{
+"title": "MIRAGE",
+  "status": "live",
+  "count": 5,
+  "slug": "mirage",
+  "client": "ilyvirato",
+  "category": "Cover Art",
+  "image": "projects/ilyvirato/mirage/mirage_cover.png",
+  "video": "projects/ilyvirato/mirage/mirage_visualizer.mp4",
+  "date": "2023-09-15",
+  "description": "Mirage is a project that explores the concept of dreams that come once seemed like a distant concept coming into fruition."
 }
 ]

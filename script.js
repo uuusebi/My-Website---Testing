@@ -15,6 +15,7 @@ const FADE_MS = 800;              // how long the audio fade in / out takes
 // ---------- Elements from index.html ----------
 const lightbox = document.getElementById('lightbox');
 const lightboxImg = document.getElementById('lightbox-img');
+const lightboxVideo = document.getElementById('lightbox-video');
 const lightboxCaption = document.getElementById('lightbox-caption');
 const metaTitle = document.getElementById('meta-title');
 const metaType = document.getElementById('meta-type');
@@ -80,8 +81,19 @@ function openLightbox(imageSrc, descriptionText, audioSrc, meta = {}) {
     metaDate.textContent = meta.date || '';
 
     // Only attempts to load if there's a real image file name
+   lightboxImg.style.display = 'none';
+    lightboxVideo.style.display = 'none';
+    lightboxVideo.pause();
+
     if (imageSrc) {
-        lightboxImg.src = imageSrc;
+        if (imageSrc.toLowerCase().endsWith('.mp4')) {
+            lightboxVideo.src = imageSrc;
+            lightboxVideo.style.display = 'block';
+            lightboxVideo.play();
+        } else {
+            lightboxImg.src = imageSrc;
+            lightboxImg.style.display = 'block';
+        }
     }
 
     // Stop any typing left over from a previous lightbox
@@ -119,6 +131,11 @@ function closeLightbox() {
     clearTimeout(typingTimer);
     clearTimeout(leaveTimer);
     armedToClose = false;
+    
+    lightboxVideo.pause();
+    lightboxVideo.removeAttribute('src');
+    lightboxVideo.load();
+    
     lightbox.classList.remove('active');
     document.body.classList.remove('lightbox-open');
 
@@ -132,7 +149,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 // Hover away from the image to close
-[lightboxImg, lightboxCaption].forEach((el) => {
+[lightboxImg, lightboxVideo, lightboxCaption].forEach((el) => {
 
     el.addEventListener('pointerenter', (e) => {
         if (e.pointerType !== 'mouse') return;
@@ -145,7 +162,7 @@ document.addEventListener('keydown', (e) => {
         if (!armedToClose) return;
 
         // Moving between the image and its caption shouldn't close it
-        if (e.relatedTarget === lightboxImg || e.relatedTarget === lightboxCaption) return;
+        if (e.relatedTarget === lightboxImg || e.relatedTarget === lightboxVideo || e.relatedTarget === lightboxCaption) return;
 
         clearTimeout(leaveTimer);
         leaveTimer = setTimeout(closeLightbox, LEAVE_CLOSE_DELAY);
@@ -275,9 +292,9 @@ async function loadProjects() {
                 `;
 
                 // Clicking a card (or hovering it long enough) opens the lightbox
-                if (work.image) {
+                if (work.video || work.image) {
                     card.addEventListener('click', () => openLightbox(
-                        work.image,
+                        work.video || work.image,
                         work.description,
                         work.audio,
                         { title: work.title, type: work.category, date: work.date }

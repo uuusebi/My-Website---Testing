@@ -588,31 +588,52 @@ header.hero.static p {
 }
 
 
-/* ---------- 9. Lightbox (the popup) ---------- */
+/* ---------- 9. Lightbox Layout(the popup) ---------- */
+
+/* Lightbox background and layout */
 .lightbox {
     position: fixed;
-    inset: 0;                                   /* covers the whole screen */
+    inset: 0;
+
     display: grid;
-    grid-template-columns: auto 300px;          /* image column, then the 300px text column */
-    column-gap: 10rem;
-    justify-content: center;                    /* centers the image + text pair horizontally */
-    align-content: center;                      /* centers the row vertically, sized to the image */
-    align-items: center;                        /* text lines up with the middle of the image */
-    padding: 0 5vw;
+
+    /* Media takes the available space; description gets 300px */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 300px);
+
+    /* Space between media and description */
+    column-gap: clamp(2rem, 4vw, 4rem);
+
+    /* Center the two columns */
+    justify-content: center;
+    align-content: center;
+    align-items: center;
+
+    /* Keep everything away from the browser edges */
+    padding: 6rem 5vw 3rem;
+
+    box-sizing: border-box;
+
+    /* Prevent the content from exceeding the screen */
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+
     background: rgba(224, 224, 224, 0);
     backdrop-filter: blur(0px);
+
     opacity: 0;
     visibility: hidden;
     cursor: zoom-out;
     z-index: var(--z-lightbox);
     pointer-events: none;
-    /* closing: fade out, then hide */
+
     transition:
         opacity 0.4s ease,
         background 0.5s ease,
         backdrop-filter 0.5s ease,
         visibility 0s linear 0.5s;
 }
+
 
 .lightbox.active {
     opacity: 1;
@@ -627,21 +648,47 @@ header.hero.static p {
         visibility 0s;
 }
 
-.lightbox img {
+
+/* Shared image and video styling */
+.lightbox img,
+.lightbox video {
     display: block;
-    max-width: 70vw;
-    max-height: 70vh;
+
+    /* Never exceed the available column width */
+    width: 100%;
+    max-width: 100%;
+
+    /* Keep media inside the available screen height */
+    max-height: 65vh;
+
+    /* Preserve the original proportions */
+    object-fit: contain;
+
     border-radius: var(--radius-card);
     box-shadow: 0 30px 50px rgba(0, 0, 0, 0.5);
-    /* closed state: small, pushed back */
+
+    /* Closed animation state */
     transform: scale(0.6) translateY(30px);
     opacity: 0;
+
     transition:
         transform var(--speed-slow) var(--ease-out),
         opacity var(--speed-med) ease;
 }
 
-.lightbox.active img {
+
+
+
+.lightbox video {
+    width: auto;
+    height: auto;
+    max-width: 70vw;
+    max-height: 70vh;
+    object-fit: contain;
+}
+
+.lightbox.active img,
+.lightbox.active video {
     /* open state: pops forward */
     transform: scale(1) translateY(0);
     opacity: 1;
@@ -650,15 +697,59 @@ header.hero.static p {
         opacity var(--speed-med) ease;
 }
 
+
+
+/* Project description */
 .lightbox p {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+
+    /* Keep text inside its column */
+    overflow-wrap: anywhere;
+    word-break: normal;
+
     color: var(--text-color-h);
     margin: 0;
+
     font-size: 1.1rem;
     line-height: 1.7;
-    text-align: justify;
+    text-align: left;
+
+    /* Allow long descriptions to scroll independently */
+    max-height: 65vh;
+    overflow-y: auto;
+
+    /* Prevent text from touching the column edge */
+    padding-right: 0.5rem;
+
     opacity: 0;
     transform: translateY(10px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
+
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease;
+}
+
+/* Description opening animation */
+.lightbox.active p {
+    opacity: 1;
+    transform: translateY(0);
+
+    transition:
+        opacity 0.6s ease 0.35s,
+        transform 0.6s ease 0.35s;
+}
+
+
+/* Description opening animation */
+.lightbox.active p {
+    opacity: 1;
+    transform: translateY(0);
+
+    transition:
+        opacity 0.6s ease 0.35s,
+        transform 0.6s ease 0.35s;
 }
 
 .lightbox.active p {
@@ -771,25 +862,39 @@ header.hero.static p {
         font-size: 1.1rem;
     }
 
-    /* Lightbox: image above text */
-    .lightbox {
-        grid-template-columns: 1fr;
-        justify-items: center;
-        row-gap: 1.2rem;
-    }
+    
+/* Lightbox on smaller screens */
+.lightbox {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
 
-    .lightbox img {
-        max-width: 88vw;
-        max-height: 55vh;
-    }
+    /* Reduce the gap between the media and description */
+    row-gap: 1.5rem;
 
-    .lightbox p {
-        max-width: 88vw;
-    }
+    /* Keep comfortable spacing around the screen edges */
+    padding: 6rem 6vw 2rem;
+}
 
-    .lightbox-meta {
-        padding: 1.5rem 6vw;
-    }
+/* Both images and videos fit the mobile screen */
+.lightbox img,
+.lightbox video {
+    width: 100%;
+    max-width: 88vw;
+    max-height: 45vh;
+}
+
+/* Description uses the full available mobile width */
+.lightbox p {
+    width: 100%;
+    max-width: 88vw;
+    max-height: 35vh;
+}
+
+/* Metadata stays away from the screen edges */
+.lightbox-meta {
+    padding: 1.5rem 6vw;
+}
+
 
     /* Contact page: everything in one column */
     .contact-info {
