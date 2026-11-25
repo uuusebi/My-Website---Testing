@@ -1,27 +1,43 @@
 /* ============================================================
-   script.js: the Work page
+   script.js: the Index page (work.html), every project in two views
    1. Settings   2. Helpers   3. Description typing
    4. Preview (stage + description + list highlight)
-   5. Filter     6. Build the page from projects.json
-   Hover a thumbnail or a title (mouse only) → preview it on the page.
-   Click or tap → project.html?slug=… (thumbnails and titles are plain links).
+   5. Filter     6. View (Gallery / List)   7. List rows + cursor preview
+   8. Build the page from projects.json
+   Gallery: hover a thumbnail or a title (mouse only) → preview it on the page.
+   List: hover a row → its image follows the cursor.
+   Click or tap → project.html?slug=… (thumbnails, titles and rows are plain links).
    ============================================================ */
 
 // ---------- 1. Settings you can tweak ----------
 const TYPING_REST_DELAY = 300;    // ms the cursor must rest on a project before its description types
 const TYPING_MAX_MS = 1500;       // every description finishes typing within this time, however long
 const TYPING_SPEED = 30;          // ms per character for short descriptions (lower = faster)
+// The real values live in style.css :root (--work-typing-*). These numbers are only fallbacks.
+
+// Reads a number from a CSS variable in style.css :root (the tweak pane can change these).
+// Falls back to the number given if the variable is missing.
+function cssNumber(name, fallback) {
+    const value = parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name));
+    return Number.isFinite(value) ? value : fallback;
+}
+
+// The filter buttons come from "services" in site.json (the same list as the Home page).
+// A project joins a filter by listing the service's name in its "services" array in projects.json.
 
 // ---------- Elements from work.html ----------
-const workTitle = document.getElementById('work-title');
-const workMeta = document.getElementById('work-meta');
-const workCaption = document.getElementById('work-caption');
+const workInfoTitle = document.getElementById('work-info-title');
+const workInfoMeta = document.getElementById('work-info-meta');
+const workInfoText = document.getElementById('work-info-text');
 const workList = document.getElementById('work-list');
 const workFilter = document.getElementById('work-filter');
 const workGrid = document.getElementById('work-grid');
 const stageLink = document.getElementById('stage-link');
 const stageImg = document.getElementById('stage-img');
 const stageVideo = document.getElementById('stage-video');
+const workMain = document.getElementById('work');
+const workView = document.getElementById('work-view');
+const workRows = document.getElementById('work-rows');
 
 // ---------- State (values that change while the page is in use) ----------
 const seenDescriptions = new Set();   // projects whose description has fully typed once (shown instantly after)
@@ -62,22 +78,25 @@ function showLoadError() {
 function stopTyping() {
     clearTimeout(restTimer);
     cancelAnimationFrame(typingFrame);
-    workCaption.classList.remove('typing');
+    workInfoText.classList.remove('typing');
 }
 
 function typeText(work) {
     const text = work.description;
-    const duration = Math.min(text.length * TYPING_SPEED, TYPING_MAX_MS);
+    const duration = Math.min(
+        text.length * cssNumber('--work-typing-speed', TYPING_SPEED),
+        cssNumber('--work-typing-max', TYPING_MAX_MS)
+    );
     const start = performance.now();
-    workCaption.classList.add('typing');
+    workInfoText.classList.add('typing');
 
     function step(now) {
         const progress = Math.min((now - start) / duration, 1);     // 0 → 1
-        workCaption.textContent = text.slice(0, Math.ceil(progress * text.length));
+        workInfoText.textContent = text.slice(0, Math.ceil(progress * text.length));
         if (progress < 1) {
             typingFrame = requestAnimationFrame(step);
         } else {
-            workCaption.classList.remove('typing');                  // done, so hide the cursor
+            workInfoText.classList.remove('typing');                  // done, so hide the cursor
             seenDescriptions.add(work.slug);                         // only counts as "seen" once it fully typed
         }
     }
@@ -125,8 +144,8 @@ function preview(work, mediaPath, instant = false) {
     if (work === currentWork) return;                                // another image of the same project: keep the text
     currentWork = work;
 
-    workTitle.textContent = work.title;
-    workMeta.textContent = [work.client, work.category, work.date].filter(Boolean).join(' · ');
+    workInfoTitle.textContent = work.title;
+    workInfoMeta.textContent = [work.client, work.category, work.date].filter(Boolean).join(' · ');
 
     // Underline this project's title in the list
     workList.querySelectorAll('a').forEach((link) => {
@@ -137,14 +156,22 @@ function preview(work, mediaPath, instant = false) {
     stopTyping();
     const text = work.description || '';
     if (instant || !text || seenDescriptions.has(work.slug)) {
-        workCaption.textContent = text;
+        workInfoText.textContent = text;
         if (instant && text) seenDescriptions.add(work.slug);
     } else {
-        workCaption.textContent = '';
-        workCaption.classList.add('typing');                         // blinking cursor while waiting
-        restTimer = setTimeout(() => typeText(work), TYPING_REST_DELAY);
+        workInfoText.textContent = '';
+        workInfoText.classList.add('typing');                         // blinking cursor while waiting
+        restTimer = setTimeout(() => typeText(work), cssNumber('--work-typing-delay', TYPING_REST_DELAY));
     }
 }
+
+// Replay (sent by the dev tweak pane, tweaks.js): retype the description on the stage
+document.addEventListener('tweaks:replay', (e) => {
+    if (e.detail.part !== 'work-typing' || !currentWork || !currentWork.description) return;
+    stopTyping();
+    workInfoText.textContent = '';
+    typeText(currentWork);
+});
 
 // Hover (mouse) or keyboard focus on a link previews it. Touch is ignored, so a tap just opens the page.
 function previewOnHover(el, work, mediaPath) {
@@ -155,28 +182,37 @@ function previewOnHover(el, work, mediaPath) {
 }
 
 // ---------- 5. Filter ----------
-function applyFilter(category) {
+// Titles and thumbnails carry their project's services as data-services="Graphic Design|Animation".
+// "|" separates the names because a service name can contain spaces.
+function servicesOf(el) {
+    return el.dataset.services ? el.dataset.services.split('|') : [];
+}
+
+function applyFilter(service) {
     // Underline the chosen filter
     workFilter.querySelectorAll('button').forEach((button) => {
-        button.classList.toggle('active', button.dataset.category === category);
+        button.classList.toggle('active', button.dataset.service === service);
     });
 
-    // Fade out (and disable) everything that doesn't match. "" means All.
-    document.querySelectorAll('.work [data-category]:not(button)').forEach((el) => {
-        el.classList.toggle('dimmed', category !== '' && el.dataset.category !== category);
+    // Fade out (and disable) everything that doesn't offer this service. "" means All.
+    document.querySelectorAll('.work [data-services]').forEach((el) => {
+        el.classList.toggle('dimmed', service !== '' && !servicesOf(el).includes(service));
     });
 }
 
-function buildFilter(works) {
-    const categories = [...new Set(works.map((work) => work.category).filter(Boolean))];
+function buildFilter(works, serviceNames) {
+    // Only show a service once at least one project uses it, so no button leads to an empty page
+    const used = serviceNames.filter((service) =>
+        works.some((work) => (work.services || []).includes(service))
+    );
 
-    ['', ...categories].forEach((category) => {
+    ['', ...used].forEach((service) => {
         const item = document.createElement('li');
         const button = document.createElement('button');
         button.type = 'button';
-        button.dataset.category = category;
-        button.textContent = category || 'All';
-        button.addEventListener('click', () => applyFilter(category));
+        button.dataset.service = service;
+        button.textContent = service || 'All';
+        button.addEventListener('click', () => applyFilter(service));
         item.appendChild(button);
         workFilter.appendChild(item);
     });
@@ -184,7 +220,94 @@ function buildFilter(works) {
     applyFilter('');                                                 // start with All selected
 }
 
-// ---------- 6. Build the page from projects.json ----------
+// The service names, in the order they're listed in site.json.
+// If site.json can't load, fall back to the services the projects themselves use.
+async function loadServiceNames(works) {
+    try {
+        const response = await fetch('site.json');
+        const site = await response.json();
+        return (site.services || []).map((service) => service.name);
+    } catch (error) {
+        console.error('Could not load site.json, building the filter from projects.json:', error);
+        return [...new Set(works.flatMap((work) => work.services || []))];
+    }
+}
+
+// ---------- 6. View (Gallery / List) ----------
+// main.work has data-view="gallery" or "list"; style.css shows only that view.
+// The choice is kept in the URL (?view=list) so a shared link opens the same view.
+const VIEWS = ['gallery', 'list'];
+
+function setView(view, animate = true) {
+    if (!VIEWS.includes(view)) view = 'gallery';
+    workMain.dataset.view = view;
+
+    workView.querySelectorAll('button').forEach((button) => {
+        button.classList.toggle('active', button.dataset.view === view);
+    });
+
+    // List view has no stage, so the big title just says Index
+    workInfoTitle.textContent = view === 'list' || !currentWork ? 'Index' : currentWork.title;
+
+    // Fade the new view in (style.css: .work-view-in)
+    if (animate) {
+        const shown = view === 'list' ? workRows : document.getElementById('work-gallery');
+        shown.classList.remove('work-view-in');
+        void shown.offsetWidth;                                      // restart the animation
+        shown.classList.add('work-view-in');
+    }
+
+    const url = new URL(location.href);
+    url.searchParams.set('view', view);
+    history.replaceState(null, '', url);                            // changes the URL without reloading
+}
+
+workView.addEventListener('click', (e) => {
+    const button = e.target.closest('button');
+    if (button) setView(button.dataset.view);
+});
+
+// ---------- 7. List rows + cursor preview ----------
+// One shared preview image that follows the cursor while it's over a row
+const rowsPreview = document.createElement('img');
+rowsPreview.className = 'work-rows-preview';
+rowsPreview.alt = '';
+document.body.appendChild(rowsPreview);
+
+document.addEventListener('pointermove', (e) => {
+    rowsPreview.style.left = e.clientX + 'px';
+    rowsPreview.style.top = e.clientY + 'px';
+    // Flips to the left when the preview (plus its gap and some margin) wouldn't fit on the right
+    const needed = cssNumber('--list-preview-size', 260) + cssNumber('--list-preview-offset', 24) * 2 + 52;
+    rowsPreview.classList.toggle('flip', e.clientX > window.innerWidth - needed);
+});
+
+function buildRow(work) {
+    const row = document.createElement('a');
+    row.href = projectUrl(work);
+    row.className = 'work-rows-row';
+    row.dataset.services = (work.services || []).join('|');           // so the filter dims rows too
+
+    // One <span> per column. textContent keeps odd characters in titles safe.
+    [work.title, work.client, work.category, work.date].forEach((text) => {
+        const cell = document.createElement('span');
+        cell.textContent = text || '';
+        row.appendChild(cell);
+    });
+
+    if (work.image) {
+        row.addEventListener('pointerenter', (e) => {
+            if (e.pointerType !== 'mouse') return;                   // no hover preview on touch screens
+            rowsPreview.src = encodeURI(work.image);
+            rowsPreview.classList.add('show');
+        });
+        row.addEventListener('pointerleave', () => rowsPreview.classList.remove('show'));
+    }
+
+    workRows.appendChild(row);
+}
+
+// ---------- 8. Build the page from projects.json ----------
 async function loadProjects() {
     try {
         const response = await fetch('projects.json');
@@ -201,11 +324,13 @@ async function loadProjects() {
             link.href = projectUrl(work);
             link.textContent = work.title;
             link.dataset.slug = work.slug;
-            link.dataset.category = work.category || '';
+            link.dataset.services = (work.services || []).join('|');
             item.appendChild(link);
             workList.appendChild(item);
 
             if (work.image) previewOnHover(link, work, work.video || work.image);
+
+            buildRow(work);                                          // the List view's row
 
             // Thumbnails: the cover plus every gallery image (videos are skipped as thumbnails)
             const images = [work.image, ...(work.gallery || [])]
@@ -215,7 +340,7 @@ async function loadProjects() {
                 const thumb = document.createElement('a');
                 thumb.href = projectUrl(work);
                 thumb.className = 'thumb';
-                thumb.dataset.category = work.category || '';
+                thumb.dataset.services = (work.services || []).join('|');
                 thumb.style.setProperty('--i', thumbIndex++);       // staggers the fade-in
                 thumb.innerHTML = `<img src="${escapeHTML(encodeURI(path))}" alt="${escapeHTML(work.title)}" loading="lazy">`;
                 workGrid.appendChild(thumb);
@@ -225,11 +350,13 @@ async function loadProjects() {
             });
         });
 
-        buildFilter(works);
+        buildFilter(works, await loadServiceNames(works));
 
         // Start with the first project on the stage, so the page isn't empty before any hover
         const first = works.find((work) => work.image);
         if (first) preview(first, first.video || first.image, true);
+
+        setView(new URLSearchParams(location.search).get('view'), false);   // the view from the URL, or Gallery
     } catch (error) {
         console.error('Could not load projects.json:', error);
         showLoadError();

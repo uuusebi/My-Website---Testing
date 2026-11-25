@@ -1,10 +1,11 @@
 /* ============================================================
    style.css
    1. Variables      2. Base          3. Top bar
-   4. Hero           5. Portfolio grid   6. About
-   7. Contact        8. Archive       9. Work page
+   4. Hero           5. Home stages      6. About
+   7. Contact        8. Index list view   9. Index (work.html)
    10. Home          11. Project page
    12. Responsive    13. Reduced motion
+   14. Tweak pane (dev only, tweaks.js)
    ============================================================ */
 
 
@@ -15,6 +16,54 @@
     --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
     --speed-med: 0.6s;
     --speed-slow: 0.9s;
+    --stagger-thumb: 105ms;                      /* TWEAK: delay between each Work thumbnail's fade-in */
+
+    /* Page entry: every page fades in through grain + blur */
+    --enter-blur: 28px;                         /* TWEAK: how blurry a page starts */
+    --grain-amount: 0.65;                       /* TWEAK: how strong the grain starts (0 = none, 1 = full) */
+    --enter-duration: 2.4s;                     /* TWEAK: how long the blur and grain take to clear */
+
+    /* Project pages: the handoff from one project to the next */
+    --project-cover-scale: 0.95;                /* TWEAK: how small a project shrinks while the next slides over (1 = no shrink) */
+    --project-cover-dim: 0.4;                   /* TWEAK: how much it fades while covered (0 = none, 1 = fully) */
+
+    /* Home sequence: intro → services → works */
+    --stage-fade: 900;                          /* TWEAK: ms a stage takes to fade out (and the next to fade in) */
+    --intro-hold: 1200;                         /* TWEAK: ms the intro stays after it finishes typing */
+    --service-hold: 2200;                       /* TWEAK: ms each service stays highlighted */
+    --works-columns: 7;                         /* TWEAK: columns in the Home works grid */
+    --works-gap: 2rem;                          /* TWEAK: space between works (rows get 3× this) */
+    --works-blur: 12px;                         /* TWEAK: blur on the other projects while one is hovered */
+
+    /* Everything below can also be changed live with the tweak pane (tweaks.js, localhost only).
+       The pane's Save button writes new values straight into these lines (tweaks-server.js). */
+
+    /* Work page layout */
+    --work-title-size: 4rem;                    /* TWEAK: big WORK / project title size */
+    --work-title-width: 40rem;                  /* TWEAK: title width */
+    --work-text-width: 22rem;                   /* TWEAK: description width */
+    --work-text-lines: 6;                       /* TWEAK: lines reserved for the description */
+    --work-stage-height: 42vh;                  /* TWEAK: preview height (kept between 240px and 520px) */
+    --work-stage-gap-top: 1rem;                 /* TWEAK: space above the preview */
+    --work-stage-gap-bottom: 5vh;               /* TWEAK: space between the preview and the thumbnails */
+    --work-thumb-size: 8vh;                     /* TWEAK: thumbnail size (kept between 48px and 96px) */
+    --work-thumb-gap: 1.2rem;                   /* TWEAK: space between thumbnails */
+
+    /* Typing speeds (plain numbers in ms: JS reads these) */
+    --hero-start-delay: 300;                    /* TWEAK: wait before the hero intro starts */
+    --hero-title-speed: 90;                     /* TWEAK: ms per letter of the hero name */
+    --hero-intro-speed: 18;                     /* TWEAK: ms per letter of the hero paragraph */
+    --work-typing-delay: 950;                   /* TWEAK: hover rest before a description types */
+    --work-typing-speed: 85;                    /* TWEAK: ms per letter of a Work description */
+    --work-typing-max: 3600;                    /* TWEAK: longest a description may take to type */
+
+    /* Hero and scroll effects */
+    --hero-blur: 14px;                          /* TWEAK: blur at the start of the intro and when scrolled away */
+    --hero-focus-duration: 2.4s;                /* TWEAK: how long the blur-to-sharp intro takes */
+    --hero-scroll-range: 0.7;                   /* TWEAK: scroll distance to fade the hero (share of window height) */
+    --list-preview-size: 200px;              /* TWEAK: Index list view hover preview size */
+    --list-preview-offset: 24px;             /* TWEAK: gap between the cursor and the preview */
+    --list-preview-scale: 0.66;              /* TWEAK: preview's starting scale before it pops in */
 
     /* Colors */
     --bg: #ffffff;
@@ -54,6 +103,8 @@
     /* Layers (higher number sits on top) */
     --z-preview: 400;
     --z-nav: 500;
+    --z-grain: 900;                             /* entry grain, over the page (pointer-events: none) */
+    --z-tweaks: 1000;                           /* dev tweak pane, above everything */
 }
 
 
@@ -72,8 +123,53 @@ body {
 }
 
 
+/* Page entry, part 1: film grain over the whole page that fades out completely.
+   It's oversized so it can shake without showing edges. */
+body::before {
+    content: "";
+    position: fixed;
+    inset: -50%;
+    z-index: var(--z-grain);
+    pointer-events: none;                       /* never blocks clicks */
+    opacity: 0;
+    visibility: hidden;                         /* once faded, the browser skips drawing it */
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    animation:
+        grain-fade var(--enter-duration) ease-out,  /* strong grain that fades to nothing */
+        grain-shift 0.8s steps(1) infinite;         /* jitter, so it looks like moving film */
+}
+
+@keyframes grain-fade {
+    from { opacity: var(--grain-amount); visibility: visible; }
+    to   { opacity: 0; visibility: visible; }
+}
+
+@keyframes grain-shift {
+    0%   { transform: translate(0, 0); }
+    20%  { transform: translate(-5%, 4%); }
+    40%  { transform: translate(6%, -3%); }
+    60%  { transform: translate(-3%, -6%); }
+    80%  { transform: translate(5%, 3%); }
+    100% { transform: translate(0, 0); }
+}
+
+/* Page entry, part 2: the nav and the page content go from blurry to sharp.
+   "backwards" (not "both") so no filter is left behind afterwards: a leftover filter
+   would break position: fixed and sticky for everything inside. */
+.topbar,
+main {
+    animation: page-enter var(--enter-duration) var(--ease-out) backwards;
+}
+
+@keyframes page-enter {
+    from { filter: blur(var(--enter-blur)); opacity: 0; }
+    to   { filter: blur(0); opacity: 1; }
+}
+
+
 /* ---------- 3. Top bar ----------
-   [ brand ]      [ Work  About  Contact ]      [ Archive  Instagram ]   */
+   [ brand ]      [ Index  About  Contact ]      [ Instagram ]   */
 .topbar {
     position: fixed;                            /* stays at the top while you scroll */
     top: 0;
@@ -143,7 +239,7 @@ header.hero {
     z-index: 0;
 
     /* scroll-out effect: hero.js sets --p (0 to 1) as you scroll, and CSS turns it into blur and fade */
-    filter: blur(calc(var(--p, 0) * 28px));
+    filter: blur(calc(var(--p, 0) * var(--hero-blur)));
     opacity: calc(1 - var(--p, 0));
     will-change: filter, opacity;
 
@@ -174,7 +270,7 @@ header.hero h1 {
 
 header.hero p {
     position: relative;
-    z-index: 1;                                 /* stays above the grain layer */
+    z-index: 1;
     flex: 0 1 28rem;                            /* paragraph column: up to 28rem wide, shrinks if needed */
     max-width: 50ch;
     font-size: 1.2rem;
@@ -191,11 +287,11 @@ header.hero p {
 
 header.hero h1.focus,
 header.hero p.focus {
-    animation: hero-focus 2.4s var(--ease-out) both;
+    animation: hero-focus var(--hero-focus-duration) var(--ease-out) both;
 }
 
 @keyframes hero-focus {
-    from { opacity: 0; filter: blur(28px); }
+    from { opacity: 0; filter: blur(var(--hero-blur)); }
     to   { opacity: 1; filter: blur(0); }
 }
 
@@ -225,38 +321,6 @@ header.hero .char.caret::after {
     50% { opacity: 0; }
 }
 
-/* Film grain overlay */
-header.hero::after {
-    content: "";
-    position: absolute;
-    inset: -50%;                                /* oversized so it can shake without showing edges */
-    z-index: 2;
-    pointer-events: none;
-    opacity: 0;
-    mix-blend-mode: multiply;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-}
-
-header.hero.ready::after {
-    animation:
-        grain-fade 3.2s ease-out both,          /* heavy grain that settles to a faint one */
-        grain-shift 0.8s steps(1) infinite;     /* jitter, so it looks like moving film */
-}
-
-@keyframes grain-fade {
-    from { opacity: 0.65; }
-    to   { opacity: 0.12; }
-}
-
-@keyframes grain-shift {
-    0%   { transform: translate(0, 0); }
-    20%  { transform: translate(-5%, 4%); }
-    40%  { transform: translate(6%, -3%); }
-    60%  { transform: translate(-3%, -6%); }
-    80%  { transform: translate(5%, 3%); }
-    100% { transform: translate(0, 0); }
-}
-
 /* Fully scrolled past: hide it so it no longer takes clicks */
 header.hero.gone {
     visibility: hidden;
@@ -269,112 +333,64 @@ header.hero.static p {
 }
 
 
-/* ---------- 5. Portfolio grid ---------- */
+/* ---------- 5. Home stages ----------
+   Home plays as a sequence of full-screen stages (home.js): intro → services → works.
+   home.js adds .home-sequence to <html> (not with reduced motion: then it's a normal page). */
 
-.portfolio-grid {
-    position: relative;
-    z-index: 1;                                 /* cards sit above the pinned hero */
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 5rem;
-    align-items: start;                         /* cards keep their own height, no stretching */
+/* Only the showing stage is on screen (the hero's display: flex would beat [hidden]) */
+.home-stage[hidden] {
+    display: none !important;
 }
 
-.project-card {
-    position: relative;                         /* lets the info panel float over the image */
-    background: none;
-    border: none;
-    border-radius: var(--radius-card);
-    cursor: pointer;
-    overflow: visible;                          /* so soft shadows aren't clipped */
-    transition: transform 0.4s var(--ease-out);
+/* A stage leaving: fades out through blur. A stage arriving: fades in from blur. */
+.home-stage-out {
+    animation: stage-out calc(var(--stage-fade) * 1ms) var(--ease-out) forwards;
+    pointer-events: none;
 }
 
-/* Cards are <a> links to the project page: block-level, no blue underlined text */
-a.project-card {
-    display: block;
-    color: inherit;
-    text-decoration: none;
+.home-stage-in {
+    animation: stage-in calc(var(--stage-fade) * 1ms) var(--ease-out) backwards;
 }
 
-.project-card:hover {
-    transform: translateY(-3px);
+@keyframes stage-out {
+    to { opacity: 0; filter: blur(var(--enter-blur)); }
 }
 
-/* Visible outline for people navigating with the keyboard */
-.project-card:focus-visible {
-    outline: 2px solid var(--text-color-h);
-    outline-offset: 6px;
+@keyframes stage-in {
+    from { opacity: 0; filter: blur(var(--enter-blur)); }
 }
 
-/* Reveal: hidden until it scrolls into view (script.js adds .in-view) */
-.project-card.reveal:not(.in-view) {
+/* No scrolling during stages 01 and 02 (scrolling skips ahead instead) */
+html.home-locked {
+    overflow: hidden;
+}
+
+/* The services stage fills the screen, with the list in the middle */
+.home-sequence .services {
+    min-height: calc(100svh - var(--top-space) - 4rem);
+    margin: 0;
+    align-content: center;
+    border-top: none;
+}
+
+/* 01 / 03, bottom left. Fades away once the last stage is reached. */
+.home-progress {
+    position: fixed;
+    left: var(--gutter);
+    bottom: 1.4rem;
+    z-index: var(--z-nav);
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    color: var(--text-color-muted);
+    transition: opacity var(--speed-med) ease;
+}
+
+.home-progress.done {
     opacity: 0;
-    transform: translateY(48px) scale(0.97);
 }
 
-.project-card.in-view {
-    animation: card-in var(--speed-slow) var(--ease-out) backwards;
-    animation-delay: calc(var(--i, 0) * 120ms); /* staggers cards within a row */
-}
-
-@keyframes card-in {
-    from {
-        opacity: 0;
-        transform: translateY(48px) scale(0.97);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-/* Works for both the <img> and the gray placeholder <div> */
-.project-image {
-    display: block;
-    width: 100%;
-    aspect-ratio: 1 / 1;                        /* square */
-    object-fit: cover;                          /* crops to fill the square, no stretching */
-    border-radius: var(--radius-card);
-    background: #ddd;
-}
-
-/* The frosted, neumorphic label on each card */
-.project-info {
-    position: absolute;
-    left: 1rem;
-    bottom: 1rem;
-    width: fit-content;                         /* only as wide as the text */
-    max-width: calc(100% - 2rem);
-    padding: 0.7rem 1.1rem;
-    border-radius: var(--radius-panel);
-
-    /* frosted glass */
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-
-    /* neumorphic: a dark shadow bottom-right, a light one top-left */
-    box-shadow:
-        6px 6px 14px rgba(0, 0, 0, 0.22),
-        -5px -5px 12px rgba(255, 255, 255, 0.45),
-        inset 1px 1px 1px rgba(255, 255, 255, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.35);
-}
-
-.project-info p {
-    font-size: 0.7rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-color-project-info-p);
-    margin-bottom: 0.15rem;
-}
-
-.project-info h3 {
-    font-size: 1rem;
-    font-weight: 700;
-    letter-spacing: -0.01em;
-    color: var(--text-color-project-info-h3);
+html:not(.home-sequence) .home-progress {
+    display: none;
 }
 
 
@@ -521,22 +537,16 @@ a.project-card {
 }
 
 
-/* ---------- 8. Archive page ---------- */
-.archive {
-    padding-top: 16vh;
-    padding-bottom: 4rem;
-}
+/* ---------- 8. Index: List view (work.html?view=list) ----------
+   Was the Archive page. One row per project; hovering a row shows its image by the cursor. */
 
-.archive h1 {
-    font-size: clamp(2.2rem, 6vw, 5.5rem);
-    font-weight: 700;
-    line-height: 1;
-    letter-spacing: -0.04em;
-    margin-bottom: 8vh;
+/* The rows' box: room above, like the old Archive page */
+.work-rows {
+    padding: 4vh 0 4rem;
 }
 
 /* Each row is a 4-column grid: title | client | type | date */
-.archive-row {
+.work-rows-row {
     display: grid;
     grid-template-columns: 2fr 1.5fr 1fr 1fr;
     gap: 1.2rem;
@@ -546,65 +556,65 @@ a.project-card {
     transition: padding-left 0.4s var(--ease-out);
 }
 
-.archive-row:last-child {
+.work-rows-row:last-child {
     border-bottom: 1px solid var(--line);
 }
 
 /* Project rows are <a> links: keep the text black, no underline */
-a.archive-row {
+a.work-rows-row {
     color: var(--text-color-h);
     text-decoration: none;
 }
 
-a.archive-row:focus-visible {
+a.work-rows-row:focus-visible {
     outline: 2px solid currentColor;
     outline-offset: 4px;
 }
 
-.archive-row span:not(:first-child) {
+.work-rows-row span:not(:first-child) {
     color: var(--text-color-soft);
 }
 
 /* The column titles row. Same specificity as the rule above, so it wins by coming later. */
-.archive-row.archive-head span {
+.work-rows-row.work-rows-head span {
     color: var(--text-color-muted);
 }
 
-.archive-row:not(.archive-head):hover {
+.work-rows-row:not(.work-rows-head):hover {
     padding-left: 0.6rem;                       /* a small nudge on hover */
 }
 
 /* Preview image that follows the cursor over a row */
-.archive-preview {
+.work-rows-preview {
     position: fixed;
     left: 0;
     top: 0;
     z-index: var(--z-preview);
-    width: 260px;
+    width: var(--list-preview-size);
     aspect-ratio: 1 / 1;
     object-fit: cover;
     border-radius: var(--radius-card);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
     pointer-events: none;                       /* never blocks the row underneath */
     opacity: 0;
-    transform: translate(24px, -50%) scale(0.92);
+    transform: translate(var(--list-preview-offset), -50%) scale(var(--list-preview-scale));
     transition:
         opacity 0.3s ease,
         transform 0.4s var(--ease-out);
 }
 
-.archive-preview.show {
+.work-rows-preview.show {
     opacity: 1;
-    transform: translate(24px, -50%) scale(1);
+    transform: translate(var(--list-preview-offset), -50%) scale(1);
 }
 
 /* Near the right edge: appears on the left of the cursor instead */
-.archive-preview.flip {
-    transform: translate(calc(-100% - 24px), -50%) scale(0.92);
+.work-rows-preview.flip {
+    transform: translate(calc(-100% - var(--list-preview-offset)), -50%) scale(var(--list-preview-scale));
 }
 
-.archive-preview.flip.show {
-    transform: translate(calc(-100% - 24px), -50%) scale(1);
+.work-rows-preview.flip.show {
+    transform: translate(calc(-100% - var(--list-preview-offset)), -50%) scale(1);
 }
 
 
@@ -623,8 +633,26 @@ a.archive-row:focus-visible {
     grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto;
     gap: 3rem;
     align-items: start;
-    font-size: 1.1rem;
+    font-size: .85rem;
     line-height: 1.35;
+}
+/* The big project title at the top left (WORK, then the hovered project's name) */
+/* The big title (WORK, then the hovered project's name) */
+.work-info-title {
+    font-size: var(--work-title-size);
+    font-weight: 700;
+    /* TWEAK: TITLE WIDTH. Wider = long project names break onto fewer lines.
+       Can't grow past its grid column (see .work-top). */
+    max-width: var(--work-title-width);
+}
+
+/* Left: the box holding the title, meta line and description of the previewed project.
+   Rules here affect all three together. */
+/* (.work-info has no max-width on purpose: the title and the text each set their own width) */
+/* Small grey line under the title: client · category · date */
+.work-info-meta {
+    color: var(--text-color-muted);
+    margin-bottom: .75rem;
 }
 
 /* Gray "Selected Work:" / "Filter:" labels that sit beside their lists */
@@ -633,28 +661,28 @@ a.archive-row:focus-visible {
     white-space: nowrap;
 }
 
-/* Left: description of the previewed project */
-.work-desc {
-    max-width: 36rem;
-}
 
-.work-desc h1 {
-    font-size: 1.1rem;
-    font-weight: 700;
-}
-
-.work-desc-meta {
-    color: var(--text-color-muted);
-    margin-bottom: 1rem;
-}
-
-/* A fixed height so the page doesn't jump while a description types in */
-#work-caption {
-    min-height: calc(1.35em * 8);
+/* The description paragraph that types in. A fixed height so the page doesn't jump while it types */
+.work-info-text {
+    /* TWEAK: DESCRIPTION WIDTH. Narrower = shorter lines but more of them
+       (if it gets more lines than the min-height below allows, raise that number too). */
+    max-width: var(--work-text-width);
+    /* TWEAK: DESCRIPTION ALIGNMENT. justify = straight left AND right edges.
+       Other options: left, center, right. */
+    text-align: justify;
+    /* TWEAK: GAP BETWEEN THE DESCRIPTION AND THE PREVIEW (part 1 of 3, the biggest one)
+       This reserves room for 6 lines of description text, even when the text is shorter.
+       The number is how many lines are reserved (1.35em = the height of one line).
+       - Lower it (e.g. 4) → the preview moves up closer to the description.
+       - Raise it (e.g. 8) → more empty space under the description.
+       If a description is longer than this many lines, the preview gets pushed down while it
+       types, so keep the number at least as big as your longest description.
+       Parts 2 and 3 are in .work-stage below. */
+    min-height: calc(1.35em * var(--work-text-lines));
 }
 
 /* Blinking cursor shown while the description is being typed */
-#work-caption.typing::after {
+.work-info-text.typing::after {
     content: "|";
     margin-left: 2px;
     animation: blink 0.7s steps(1) infinite;
@@ -664,7 +692,7 @@ a.archive-row:focus-visible {
 .work-list,
 .work-filter {
     display: flex;
-    gap: 0.6rem;
+    gap: 0.4rem;
 }
 
 .work-list ul,
@@ -685,7 +713,64 @@ a.archive-row:focus-visible {
     transition: opacity 0.3s ease;
 }
 
-/* The project being previewed, and the chosen filter, get an underline */
+/* Right column: Filter, with View under it */
+.work-options {
+    display: grid;
+    gap: 1rem;
+    justify-items: start;
+}
+
+.work-view {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.work-view ul {
+    list-style: none;
+}
+
+.work-view button {
+    color: var(--text-color-h);
+    font: inherit;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-align: left;
+}
+
+.work-view button:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+/* Only one view shows at a time (script.js sets data-view on main.work).
+   List view also hides the hover-preview parts of the top row. */
+.work[data-view="gallery"] .work-rows,
+.work[data-view="list"] .work-gallery,
+.work[data-view="list"] .work-list,
+.work[data-view="list"] .work-info-meta,
+.work[data-view="list"] .work-info-text {
+    display: none;
+}
+
+/* Keep Filter + View in the right column even though the title list is hidden */
+.work[data-view="list"] .work-options {
+    grid-column: -2;
+}
+
+/* The view you switch to fades and rises in */
+.work-view-in {
+    animation: work-view-in var(--speed-med) var(--ease-out);
+}
+
+@keyframes work-view-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* The project being previewed, the chosen filter and the chosen view get an underline */
+.work-view button.active,
 .work-list a.active,
 .work-filter button.active {
     text-decoration: underline;
@@ -704,9 +789,18 @@ a.archive-row:focus-visible {
 .work-stage {
     display: flex;
     justify-content: center;
+    /* TWEAK: GAP BETWEEN THE DESCRIPTION AND THE PREVIEW (part 3 of 3)
+       "center" places the image in the middle of the box's height, so a wide, short image
+       gets empty space above it. Change to flex-start (here AND in .work-stage a below)
+       to pin images to the top of the box instead. */
     align-items: center;
-    height: clamp(240px, 42vh, 520px);
-    margin: 6vh 0;
+    /* TWEAK: PREVIEW SIZE. min 240px, grows with the window height (42vh), max 520px. */
+    height: clamp(240px, var(--work-stage-height), 520px);
+    /* TWEAK: GAP BETWEEN THE DESCRIPTION AND THE PREVIEW (part 2 of 3)
+       The first value is the space ABOVE the preview (smaller = closer to the description).
+       TWEAK: GAP BETWEEN THE PREVIEW AND THE THUMBNAILS
+       The last value is the space BELOW the preview. */
+    margin: var(--work-stage-gap-top) 0 var(--work-stage-gap-bottom);   /* top | left & right | bottom */
 }
 
 .work-stage a {
@@ -741,8 +835,14 @@ a.archive-row:focus-visible {
 /* Thumbnail grid: small, every image of every project */
 .work-grid {
     display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    gap: 3vw 2.5vw;
+    /* Small fixed-size cells instead of 10 stretchy columns. The size follows the window
+       HEIGHT (vh), so on short laptop screens the thumbnails shrink and the first row still
+       fits under the stage. auto-fill fits as many cells per row as the width allows. */
+    /* TWEAK: THUMBNAIL SIZE. clamp(smallest, preferred, largest).
+       Raise 8vh for bigger thumbnails, lower it for smaller ones; 48px and 96px are the limits. */
+    grid-template-columns: repeat(auto-fill, clamp(48px, var(--work-thumb-size), 96px));
+    /* TWEAK: SPACE BETWEEN THUMBNAILS (both across and down) */
+    gap: var(--work-thumb-gap);
     padding-bottom: 4rem;
 }
 
@@ -752,7 +852,7 @@ a.archive-row:focus-visible {
     text-decoration: none;
     transition: opacity 0.3s ease;
     animation: thumb-in var(--speed-slow) var(--ease-out) backwards;
-    animation-delay: calc(var(--i, 0) * 40ms);   /* thumbnails appear one after another */
+    animation-delay: calc(var(--i, 0) * var(--stagger-thumb));   /* thumbnails appear one after another */
 }
 
 /* Square cell, but the image inside keeps its real proportions (no cropping) */
@@ -822,47 +922,196 @@ a.archive-row:focus-visible {
     color: var(--text-color-muted);
 }
 
-/* Services: three columns, each with a ruled line on top (like the Contact info blocks) */
+/* Services: one ruled row split into three equal columns.
+   Column 1: the small label with the titles under it. Column 3: the preview. */
 .services {
+    --services-gap: 1.2rem;
+    /* Width of one column: the page width minus the side gutters and the two gaps, divided by 3 */
+    --services-col: calc((100vw - 2 * var(--gutter) -  2 * var(--services-gap)) / 2.5);
+
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1.2rem;
-    padding: 12vh 0;
+    column-gap: var(--services-gap);
+    row-gap: 1rem;                              /* space between the label and the titles */
+    margin: 12vh 0;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
 }
 
-.services .section-label {
-    grid-column: 1 / -1;                        /* the label spans all three columns */
-    margin-bottom: 2rem;
+.service-list {
+    grid-column: 1 / -1;                        /* spans all three columns, on the row under the label */
+    position: relative;                         /* the previews are positioned inside it */
+    list-style: none;
+    /* Tall enough for a square preview plus its caption */
+    min-height: calc(var(--services-col) + 5rem);
 }
 
 .service {
-    border-top: 1px solid var(--line);
-    padding-top: 1rem;
+    /* One column wide: the list's width minus the two gaps, divided by 3.
+       This keeps the titles lined up under the label in column 1. */
+    width: calc((100% - 2 * var(--services-gap)) / 3);
+    cursor: default;
+    outline: none;
 }
 
 .service h3 {
-    font-size: clamp(1.4rem, 2.4vw, 2rem);
+    font-size: clamp(1rem, 1.2vw, 1.25rem);
     font-weight: 700;
     letter-spacing: -0.03em;
-    margin-bottom: 0.8rem;
+    line-height: 1.3;
+    color: var(--text-color-muted);              /* titles rest grey... */
+    transition: color var(--speed-med) var(--ease-out);
 }
 
-.service p {
+/* The preview sits in the right column. Every preview is stacked in the same spot;
+   only the active one is visible. Column 3 starts after two columns and two gaps:
+   2 × (100% - 2 gaps) / 3 + 2 gaps. */
+.service-preview {
+    position: absolute;
+    top: 0;
+    left: calc(2 * (100% - 2 * var(--services-gap)) / 3 + 2 * var(--services-gap));
+    right: 0;
+    opacity: 0;
+    transform: translateY(0.6rem);
+    pointer-events: none;                       /* hidden previews never block the mouse */
+    transition:
+        opacity var(--speed-med) var(--ease-out),
+        transform var(--speed-med) var(--ease-out);
+}
+
+.service-preview img,
+.service-preview video {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    background: var(--glass-bg);                /* grey box while the image loads */
+}
+
+.service-preview p {
+    margin-top: 0.8rem;
     font-size: 1.05rem;
     line-height: 1.6;
     color: var(--text-color-p);
-    max-width: 32ch;
+    max-width: 40ch;
 }
 
-/* Featured work */
-.featured-head {
+/* Active service: the one hovered or focused, or the first one when no service is hovered.
+   :has() asks "does the list contain a hovered/focused service?" */
+.service:hover h3,
+.service:focus-visible h3,
+.service-list:not(.service-list-auto):not(:has(.service:hover, .service:focus-visible)) .service:first-child h3 {
+    color: var(--text-color-h);                 /* ...and turn black when active */
+}
+
+.service:hover .service-preview,
+.service:focus-visible .service-preview,
+.service-list:not(.service-list-auto):not(:has(.service:hover, .service:focus-visible)) .service:first-child .service-preview {
+    opacity: 1;
+    transform: none;
+}
+
+/* While home.js plays the services (.service-list-auto), only the .active one shows,
+   whatever the mouse is doing (hovering moves .active instead) */
+.service-list-auto .service h3 {
+    color: var(--text-color-muted);
+}
+
+.service-list-auto .service .service-preview {
+    opacity: 0;
+    transform: translateY(0.6rem);
+}
+
+.service-list-auto .service.active h3 {
+    color: var(--text-color-h);
+}
+
+.service-list-auto .service.active .service-preview {
+    opacity: 1;
+    transform: none;
+}
+
+/* Works stage: every image of the featured projects, in a loose grid with empty cells.
+   Hovering one keeps that project sharp and blurs the rest (home.js sets data-active). */
+.home-works {
+    padding-top: 4vh;
+}
+
+.home-works-head {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    margin-bottom: 2rem;
+    margin-bottom: 3rem;
 }
 
-/* Underlined text link that lightens on hover (used for "See all work") */
+.home-works-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--works-columns), minmax(0, 1fr));
+    column-gap: var(--works-gap);
+    row-gap: calc(var(--works-gap) * 3);
+    align-items: start;                         /* images keep their own shape, no stretching */
+}
+
+.home-works-item {
+    display: block;
+    color: var(--text-color-h);
+    text-decoration: none;
+    transition:
+        filter var(--speed-med) var(--ease-out),
+        opacity var(--speed-med) var(--ease-out);
+}
+
+.home-works-item img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.home-works-item:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+/* One project hovered: every other image blurs and fades back */
+.home-works-grid[data-active] .home-works-item:not(.is-active) {
+    filter: blur(var(--works-blur));
+    opacity: 0.7;
+}
+
+/* Title under each image: only on touch screens (see Responsive) */
+.home-works-caption {
+    display: none;
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+}
+
+/* The hovered project's title + (number), following the cursor */
+.home-works-label {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: var(--z-preview);
+    pointer-events: none;
+    white-space: nowrap;
+    font-size: 1.6rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--text-color-h);
+    transform: translate(18px, -50%);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.home-works-label.show {
+    opacity: 1;
+}
+
+.home-works-label-count {
+    font-size: 0.9rem;
+    color: var(--text-color-muted);
+}
+
+/* Underlined text link that lightens on hover (used for "Index →") */
 .text-link {
     color: var(--text-color-h);
     text-decoration: none;
@@ -902,9 +1151,43 @@ a.archive-row:focus-visible {
 
 /* ---------- 11. Project page ---------- */
 .project-page {
-    padding-top: 12vh;
     max-width: 1200px;
     margin: 0 auto;
+}
+
+/* One project. They follow each other in an endless scroll (project.js).
+   The handoff: each project pins once its bottom reaches the bottom of the screen
+   (--project-stick, set by project.js), and the next one slides up over it.
+   While it's covered (--project-cover goes 0 → 1), it shrinks and fades toward the background. */
+.project {
+    position: sticky;
+    top: var(--project-stick, 0px);
+    min-height: 100vh;                          /* short projects still fill the screen */
+    padding: 12vh 0 4rem;
+    background: var(--bg);                      /* solid, so it hides the project underneath */
+    transform: scale(calc(1 - (1 - var(--project-cover-scale)) * var(--project-cover, 0)));
+    transform-origin: 50% calc(100% - 50vh);    /* shrinks around the middle of the screen */
+}
+
+/* The fade toward the background, as a layer on top (fading the project itself
+   would let the projects underneath show through) */
+.project::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--bg);
+    opacity: calc(var(--project-cover-dim) * var(--project-cover, 0));
+    pointer-events: none;
+}
+
+/* Fully covered by the next project: not drawn at all */
+.project.project-hidden {
+    visibility: hidden;
+}
+
+/* The invisible marker after the last project (project.js loads the next one when it's near) */
+.project-sentinel {
+    height: 1px;
 }
 
 /* Title on the left, client / type / date on the right */
@@ -993,28 +1276,39 @@ a.archive-row:focus-visible {
     gap: 2rem;
 }
 
-/* Previous | All work | Next */
-.project-nav {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
+/* End of each project: "Next: …" on the left, a small Contact button on the right */
+.project-end {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     gap: 1rem;
-    margin-top: 8rem;
+    margin-top: 6rem;
     padding-top: 1.2rem;
     border-top: 1px solid var(--line);
 }
 
-.project-nav a {
+.project-end-next {
+    color: var(--text-color-muted);
+}
+
+.project-contact {
+    font-size: 0.9rem;
     color: var(--text-color-h);
     text-decoration: none;
-    transition: color 0.3s ease;
+    padding: 0.5rem 1.1rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
-.project-nav a:hover {
-    color: var(--text-color-nav-hover);
+.project-contact:hover {
+    background: var(--text-color-h);
+    color: var(--bg);
 }
 
-.project-nav a:last-child {
-    justify-self: end;                          /* Next sits at the far right */
+.project-contact:focus-visible {
+    outline: 2px solid var(--text-color-h);
+    outline-offset: 3px;
 }
 
 /* Shown when a project can't be found */
@@ -1034,8 +1328,8 @@ a.archive-row:focus-visible {
 
 /* Tablet */
 @media (max-width: 1000px) {
-    .portfolio-grid {
-        grid-template-columns: repeat(2, 1fr);
+    .home-works-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 
     /* Work page: description on its own row above the list and filter */
@@ -1043,19 +1337,17 @@ a.archive-row:focus-visible {
         grid-template-columns: minmax(0, 1fr) auto;
     }
 
-    .work-desc {
+    .work-info {
         grid-column: 1 / -1;
     }
 
-    .work-grid {
-        grid-template-columns: repeat(6, 1fr);
-    }
+    /* (Work grid: no tablet override. The small auto-fill cells from section 9 already fit.) */
 }
 
 /* Phone */
 @media (max-width: 800px) {
 
-    /* Top bar: the name gets its own row, then the links and Archive share the row below */
+    /* Top bar: the name gets its own row, then the links share the row below */
     .topbar {
         grid-template-columns: 1fr auto;
         grid-template-areas:
@@ -1095,7 +1387,8 @@ a.archive-row:focus-visible {
     }
 
     .work-list,
-    .work-filter {
+    .work-filter,
+    .work-view {
         flex-direction: column;
         gap: 0.3rem;
     }
@@ -1105,14 +1398,28 @@ a.archive-row:focus-visible {
         gap: 4vw;
     }
 
-    /* Home: services stack into one column */
+    /* Home: services stack into one column (label above the list).
+       There's no room for the side preview, so it's hidden and every title is black. */
     .services {
         grid-template-columns: 1fr;
-        gap: 2rem;
+        row-gap: 1.2rem;
     }
 
-    .services .section-label {
-        margin-bottom: 0;
+    .service-list {
+        grid-column: 1;
+        min-height: 0;
+    }
+
+    .service {
+        width: auto;
+    }
+
+    .services .service h3 {
+        color: var(--text-color-h);
+    }
+
+    .service-preview {
+        display: none;
     }
 
     /* Project page: title above the meta, gallery one image per row */
@@ -1135,7 +1442,7 @@ a.archive-row:focus-visible {
         gap: 1.2rem;
     }
 
-    .project-nav {
+    .project-end {
         margin-top: 4rem;
         font-size: 0.95rem;
     }
@@ -1155,22 +1462,26 @@ a.archive-row:focus-visible {
         grid-template-columns: 1fr;
     }
 
-    /* Archive: show only title and date */
-    .archive-row {
+    /* Index list view: show only title and date */
+    .work-rows-row {
         grid-template-columns: 1fr auto;
     }
 
-    .archive-row span:nth-child(2),
-    .archive-row span:nth-child(3) {
+    .work-rows-row span:nth-child(2),
+    .work-rows-row span:nth-child(3) {
         display: none;
     }
 }
 
-/* Small phones: one big card per row, easy to tap */
+/* Small phones: two works per row, easy to tap */
 @media (max-width: 600px) {
-    .portfolio-grid {
-        grid-template-columns: 1fr;
-        gap: 2.5rem;
+    .home-works-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        row-gap: var(--works-gap);
+    }
+
+    .home-works-empty {
+        display: none;                          /* no empty cells on a small screen */
     }
 }
 
@@ -1178,8 +1489,16 @@ a.archive-row:focus-visible {
    On the Work page, taps go straight to the project page, so the
    hover-only description and preview stage are hidden too. */
 @media (hover: none) {
-    .archive-preview,
-    .work-desc,
+    .home-works-label {
+        display: none;
+    }
+
+    .home-works-caption {
+        display: block;
+    }
+
+    .work-rows-preview,
+    .work-info,
     .work-stage {
         display: none;
     }
@@ -1193,13 +1512,193 @@ a.archive-row:focus-visible {
 /* ---------- 13. Reduced motion ----------
    For people who turn off animations in their system settings. */
 @media (prefers-reduced-motion: reduce) {
-    .project-card.reveal:not(.in-view) {
-        opacity: 1;
-        transform: none;
-    }
-
-    .project-card.in-view,
     .thumb {
         animation: none;
     }
+
+    .work-view-in {
+        animation: none;
+    }
+
+    /* Projects: a plain stack, no pinning, shrinking or fading */
+    .project {
+        position: relative;
+        top: auto;
+        transform: none;
+    }
+
+    .project::after {
+        display: none;
+    }
+
+    /* Page entry: no grain, no blur, the page just appears */
+    body::before {
+        display: none;
+    }
+
+    .topbar,
+    main {
+        animation: none;
+    }
+
+    /* Services: previews swap instantly instead of fading and sliding */
+    .service h3,
+    .service-preview {
+        transition: none;
+        transform: none;
+    }
+}
+
+
+/* ---------- 14. Tweak pane ----------
+   Dev-only controller built by tweaks.js (loaded on localhost only).
+   Visitors never see it. Shift+T shows and hides it. */
+.tweaks {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: var(--z-tweaks);
+    width: 320px;
+    max-width: calc(100vw - 2rem);
+    max-height: 75vh;
+    display: flex;
+    flex-direction: column;
+    font-size: 0.75rem;
+    color: var(--text-color-h);
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-panel);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
+}
+
+.tweaks[hidden] {
+    display: none;                              /* display: flex above would beat the hidden attribute */
+}
+
+.tweaks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0.7rem 0.9rem 0.4rem;
+}
+
+.tweaks-hint {
+    color: var(--text-color-muted);
+}
+
+.tweaks-body {
+    overflow-y: auto;                           /* long lists scroll inside the pane */
+    padding: 0 0.9rem;
+}
+
+.tweaks-section {
+    border-top: 1px solid var(--line);
+    padding: 0.4rem 0 0.6rem;
+}
+
+.tweaks-section-title {
+    cursor: pointer;
+    font-weight: 700;
+    padding: 0.2rem 0;
+}
+
+/* One line under each section title: what animation or part of the page it controls */
+.tweaks-section-about {
+    color: var(--text-color-muted);
+    line-height: 1.35;
+    margin: 0.1rem 0 0.4rem;
+}
+
+/* label | slider | number | unit */
+.tweaks-row {
+    display: grid;
+    grid-template-columns: 7.5rem 1fr 3.6rem 1.8rem;
+    align-items: center;
+    column-gap: 0.4rem;
+    padding: 0.25rem 0;
+}
+
+/* Small grey hint under a slider: what exactly it moves */
+.tweaks-row-hint {
+    grid-column: 1 / -1;
+    color: var(--text-color-muted);
+    font-size: 0.65rem;
+    line-height: 1.3;
+}
+
+.tweaks-row-label {
+    color: var(--text-color-h);                 /* TWEAK: label color once saved (matches style.css) */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Changed but not saved to style.css yet */
+.tweaks-row.unsaved .tweaks-row-label {
+    color: var(--accent);                       /* TWEAK: label color while unsaved */
+}
+
+.tweaks-row-slider {
+    width: 100%;
+    accent-color: var(--text-color-h);
+}
+
+/* Featured tick box: sits where the slider would be */
+.tweaks-row-checkbox {
+    grid-column: 2 / -1;
+    justify-self: start;
+    accent-color: var(--text-color-h);
+}
+
+.tweaks-row-select {
+    grid-column: 2 / -1;                        /* the easing dropdown spans the slider, number and unit */
+    font: inherit;
+}
+
+.tweaks-row-number {
+    width: 100%;
+    font: inherit;
+    padding: 0.1rem 0.2rem;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+}
+
+.tweaks-row-unit {
+    color: var(--text-color-muted);
+}
+
+.tweaks-actions {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0.6rem 0.9rem 0.8rem;
+    border-top: 1px solid var(--line);
+}
+
+.tweaks-button {
+    flex: 1;
+    font: inherit;
+    padding: 0.4rem 0;
+    cursor: pointer;
+    color: var(--text-color-h);
+    background: var(--glass-bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+}
+
+.tweaks-button:hover {
+    background: var(--line);
+}
+
+.tweaks-button:disabled {
+    opacity: 0.5;                               /* while a save is on its way */
+    cursor: wait;
+}
+
+/* Replays a CSS animation: tweaks.js adds this for one frame, then removes it,
+   and the browser starts the animation over (with the new values) */
+.tweaks-restart,
+.tweaks-restart::before {
+    animation: none !important;
 }

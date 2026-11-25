@@ -1,0 +1,4 @@
+# Cloudflare Pages redirects: old address → new address, status code
+# The Archive page became the Index page's List view.
+/archive.html  /work.html?view=list  301
+/archive       /work.html?view=list  301

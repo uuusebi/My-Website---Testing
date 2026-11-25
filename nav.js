@@ -1,7 +1,8 @@
 /* ============================================================
    nav.js: builds the top bar on every page
-   Layout:  [ Sebastian Nunez ]   Work  About  Contact   [ Archive  Instagram ]
-   The name links to the Home page (index.html); Work goes to work.html.
+   Layout:  [ Sebastian Nunez ]   Index  About  Contact   [ Instagram ]
+   The name links to the Home page (index.html); Index goes to work.html
+   (the Index page, with its Gallery and List views).
    Load it once per page, at the bottom of <body>.
    ============================================================ */
 
@@ -38,13 +39,12 @@ async function initNav() {
         <a href="index.html" class="topbar-brand"${current('index')}>Sebastian Nunez</a>
 
         <div class="topbar-links">
-            <a href="work.html"${current('work')}>Work</a>
+            <a href="work.html"${current('work')}>Index</a>
             <a href="about.html"${current('about')}>About</a>
             <a href="contact.html"${current('contact')}>Contact</a>
         </div>
 
         <div class="topbar-right">
-            <a href="archive.html"${current('archive')}>Archive</a>
             ${instagram ? `<a href="${instagram.url}" class="topbar-social" target="_blank" rel="noopener">Instagram</a>` : ''}
         </div>
     `;
@@ -52,3 +52,19 @@ async function initNav() {
 }
 
 initNav();
+
+// Dev-only tweak pane: loads tweaks.js ONLY on your own machine (npm run dev).
+// On the live site this does nothing, and the pane can't be opened there at all.
+if (['localhost', '127.0.0.1'].includes(location.hostname)) {
+    // Apply saved tweak values right away (before hero.js etc. run), so intros use them
+    try {
+        const saved = JSON.parse(localStorage.getItem('tweaksValues') || '{}');
+        for (const [name, value] of Object.entries(saved)) {
+            document.documentElement.style.setProperty(name, value);
+        }
+    } catch (error) { /* storage blocked or broken: just use style.css values */ }
+
+    const tweaks = document.createElement('script');
+    tweaks.src = 'tweaks.js';
+    document.body.appendChild(tweaks);
+}

@@ -3,7 +3,40 @@
   "phone": "+1 323 552 9927",
   "location": ["Based in Los Angeles.", "Available for new projects."],
   "socials": [
-    { "label": "Instagram", "url": "https://instagram.com/uuusebi683" },
+    { "label": "Instagram", "url": "https://instagram.com/sebiii683/" },
     { "label": "LinkedIn", "url": "https://linkedin.com/in/jansebastiannunez/" }
+  ],
+  "services": [
+    {
+      "name": "Graphic Design",
+      "description": "Album covers, single artwork, posters and promotional materials for artists and brands.",
+      "preview": "projects/ilyvirato/dynama/dynama_2.png"
+    },
+    {
+      "name": "Video Editing",
+      "description": "Placeholder: describe your video editing work in one line."
+    },
+    {
+      "name": "Web Design",
+      "description": "Custom, hand-built websites with interactive animation.",
+      "preview": "projects/ilyvirato/mirage/mirage_cover.png"
+    },
+    {
+      "name": "Photography",
+      "description": "Placeholder: describe your photography work in one line."
+    },
+    {
+      "name": "Branding",
+      "description": "Placeholder: describe your branding work in one line."
+    },
+    {
+      "name": "UI/UX",
+      "description": "Placeholder: describe your UI/UX work in one line."
+    },
+    {
+      "name": "Motion Graphics",
+      "description": "Visualizers, motion graphics and music videos that bring a release to life.",
+      "preview": "projects/ilyvirato/heavenly/heavenly_cover.png"
+    }
   ]
 }

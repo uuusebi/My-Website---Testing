@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "node --test",
-    "dev": "wrangler pages dev ."
+    "dev": "node tweaks-server.js & wrangler pages dev ."
   },
   "keywords": [],
   "author": "",

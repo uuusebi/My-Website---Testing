@@ -8,50 +8,47 @@
 </head>
 <body>
 
-    <!-- Full-screen title. hero.js animates it. The empty <p> is room for a tagline. -->
-    <header class="hero">
+    <!-- Home plays as one sequence of three full-screen stages (home.js):
+         01 intro (the hero) → 02 services → 03 selected work.
+         Each fades out through blur and the next fades in. Scrolling, a click or the
+         arrow keys skip ahead. With reduced motion, the stages are a normal scrolling page. -->
+
+    <!-- Stage 01: full-screen title. hero.js animates it. -->
+    <header class="hero home-stage">
         <h1>Sebastian Nunez</h1>
         <p>Graphic Design + Animation + Web Development</p>
     </header>
 
     <main class="home">
 
-        <!-- Services: placeholder copy, rewrite each line in your own words -->
-        <section class="services">
+        <!-- Stage 02: services. home.js fills the list from "services" in site.json and
+             highlights each one in turn (its title turns black and its preview shows). -->
+        <section class="services home-stage">
             <h2 class="section-label">Services</h2>
-
-            <div class="service">
-                <h3>Graphic Design</h3>
-                <p>Album covers, single artwork, posters and promotional materials for artists and brands.</p>
-            </div>
-
-            <div class="service">
-                <h3>Animation</h3>
-                <p>Visualizers, motion graphics and music videos that bring a release to life.</p>
-            </div>
-
-            <div class="service">
-                <h3>Web Development</h3>
-                <p>Custom, hand-built websites with interactive animation.</p>
-            </div>
+            <ul class="service-list" id="service-list"></ul>
         </section>
 
-        <!-- Featured work: home.js fills this with projects marked "featured": true in projects.json -->
-        <section class="featured">
-            <div class="featured-head">
+        <!-- Stage 03: selected work. home.js fills the grid with every image of the projects
+             marked "featured": true in projects.json. Hovering one keeps that project sharp
+             and blurs the rest; its title follows the cursor. -->
+        <section class="home-works home-stage">
+            <div class="home-works-head">
                 <h2 class="section-label">Selected Work</h2>
-                <a href="work.html" class="text-link">See all work →</a>
+                <a href="work.html" class="text-link">Index →</a>
             </div>
-            <div class="portfolio-grid" id="featured-grid"></div>
-        </section>
+            <div class="home-works-grid" id="home-works-grid"></div>
 
-        <!-- Contact call-to-action. home.js fills in the location line from site.json -->
-        <section class="home-cta">
-            <p id="cta-location">Available for new projects.</p>
-            <a href="contact.html" class="cta-link">Let's work together →</a>
+            <!-- Contact call-to-action. home.js fills in the location line from site.json -->
+            <div class="home-cta">
+                <p id="cta-location">Available for new projects.</p>
+                <a href="contact.html" class="cta-link">Let's work together →</a>
+            </div>
         </section>
 
     </main>
+
+    <!-- 01 / 03: which stage is showing (home.js updates it) -->
+    <p class="home-progress" id="home-progress" aria-hidden="true"></p>
 
     <!-- Each script loads once, here at the bottom. nav.js must NOT also be in the <body> above. -->
     <script src="nav.js"></script>
